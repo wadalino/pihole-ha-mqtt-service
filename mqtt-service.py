@@ -6,7 +6,9 @@ import time
 import os
 import json
 import re
+from pprint import pprint
 
+DEBUG=False
 
 """ configuration TODO move them to a separate files and prepare install script """
 topic_group_status_base = 'pihole/groups/state/'  # topic used to publish the status of the groups
@@ -16,7 +18,7 @@ topic_global_set_base = 'pihole/set'  # topic used to receive the enable/disable
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = 'pihole/stats/state/'  # topic used to publish the status of the statistics
 env_path = '/etc/environment'  # path to the environment file with login credentials and address
-send_update_frequency = 5  # send an update every X seconds
+send_update_frequency = 30  # send an update every X seconds
 
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}
@@ -213,8 +215,8 @@ def prepare_pihole_config_message():
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
                    "manufacturer": "Raspberry",
-                   "model": "Pi Zero W",
-                   "name": "Raspberry Pi Zero W",
+                   "model": "Pi RPI2",
+                   "name": "Raspberry Pi RPI2",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:lock",
                "state_topic": f"{topic_global_status_base}blocking",
@@ -236,8 +238,8 @@ def prepare_groups_config_message(group_name_string):
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
                    "manufacturer": "Raspberry",
-                   "model": "Pi Zero W",
-                   "name": "Raspberry Pi Zero W",
+                   "model": "Pi RPI2",
+                   "name": "Raspberry Pi RPI2",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:lock",
                "state_topic": f"{topic_group_status_base}{group_name_string}",
@@ -259,8 +261,8 @@ def prepare_stats_config_message(stat_dict):
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
                    "manufacturer": "Raspberry",
-                   "model": "Pi Zero W",
-                   "name": "Raspberry Pi Zero W",
+                   "model": "Pi RPI2",
+                   "name": "Raspberry Pi RPI2",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:chart-areaspline",
                "~": topic_stat_base,
@@ -306,7 +308,7 @@ def parse_stats(stat_string):
                'Pihole Total Tasks': r'(?:Active:)[ ]+[\d]+ of ([\d]+)[ ]\w+',
                'CPU Usage': r'(?:CPU usage:)[ ]+([\d]+)(%)',
                'CPU Freq': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[x ]+([\d]+) ([\w]+)[ ]?@? ([\d]+)([a-z]+)\)',  # No cambiamos esta línea
-               'CPU Temp': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\(\d+[ ]\w+[ @]+(\d+)(\w)',
+               'CPU Temp': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[x ]+([\d]+) ([\w]+)[ ]?@? ([\d]+)([a-z]+)\)',
                'RAM Usage': r'(?:RAM usage:)[ ]+([\d]+)(%)',
                'RAM Used': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
                'RAM Total': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
@@ -330,11 +332,16 @@ def parse_stats(stat_string):
             if value:
                 value = value[0]
                 if type(value) == tuple:
+                    if DEBUG:
+                        print(stat_id)
+                        pprint(value)
                     # Si es un conjunto de valores (como para 'CPU Freq')
-                    if len(value) == 6:  # Para 'CPU Freq', hay 6 valores esperados
-                        freq, core, unit, temp, temp_value, temp_unit = value
-                        value = freq  # Usamos solo la frecuencia en este caso
-                        stats_list.append({"name": parser, 'id': stat_id, 'value': value, 'unit': unit})
+                    if len(value) == 5 and stat_id == "CPU_Freq":  # Para 'CPU Freq', hay 6 valores esperados
+                        cores, freq, unit, temp, temp_unit = value
+                        stats_list.append({"name": parser, 'id': stat_id, 'value': f"{cores}x{freq}", 'unit': unit})
+                    if len(value) == 5 and stat_id == "CPU_Temp":
+                        cores, freq, unit, temp, temp_unit = value
+                        stats_list.append({"name": parser, 'id': stat_id, 'value': temp, 'unit': temp_unit})
                     else:
                         value = clean_string(value[0].strip())
                         value = convert_type(value)
@@ -347,6 +354,10 @@ def parse_stats(stat_string):
         except Exception as e:
             print('Unable to parse:', parser, 'error:', e)
 
+    if (DEBUG):
+        pprint(stats_list)
+        print("\n--------------------------------------------------------\n\n\n")
+    
     return stats_list
 
 
