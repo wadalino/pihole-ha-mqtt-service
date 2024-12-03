@@ -9,14 +9,15 @@ import re
 from pprint import pprint
 
 DEBUG=False
+HOST="rpi2"
 
 """ configuration TODO move them to a separate files and prepare install script """
-topic_group_status_base = 'pihole/groups/state/'  # topic used to publish the status of the groups
-topic_group_set_base = 'pihole/groups/set/'  # topic used to receive commands from HomeAssistant
-topic_global_status_base = 'pihole/state/' # topic used to publish the status of pihole filtering
-topic_global_set_base = 'pihole/set'  # topic used to receive the enable/disable command from HA
+topic_group_status_base = f'pihole/{HOST}/groups/state/'  # topic used to publish the status of the groups
+topic_group_set_base = f'pihole/{HOST}/groups/set/'  # topic used to receive commands from HomeAssistant
+topic_global_status_base = f'pihole/{HOST}/state/' # topic used to publish the status of pihole filtering
+topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable/disable command from HA
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
-topic_stat_base = 'pihole/stats/state/'  # topic used to publish the status of the statistics
+topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
 env_path = '/etc/environment'  # path to the environment file with login credentials and address
 send_update_frequency = 30  # send an update every X seconds
 
