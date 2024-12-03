@@ -293,48 +293,59 @@ def convert_type(value_string):
 
 def parse_stats(stat_string):
     """
-    parses the stats from the command "pihole -c -e" passed as a string
+    Parses the stats from the command "pihole -c -e" passed as a string
     :param stat_string: String
     :return: stats_list: List of stats dictionaries
     """
-    regexes = {'Hostname': '(?:Hostname:)[ ]+(\w+)',
-               'Uptime': '(?:Uptime:)[ ]+([\d]+ [\w,:]+ [\d:]+)',
-               'Task Load 1min': '(?:Task Load:)[ ]+([\d\.]+)',
-               'Task Load 5min': '(?:Task Load:)[ ]+[\d\.]+[ ]+([\d\.]+)',
-               'Task Load 15min': '(?:Task Load:)[ ]+[\d\.]+[ ]+[\d\.]+[ ]+([\d\.]+)',
-               'Pihole Active Tasks': '(?:Active:)[ ]+([\d]+)',
-               'Pihole Total Tasks': '(?:Active:)[ ]+[\d]+ of ([\d]+)[ ]\w+',
-               'CPU Usage': '(?:CPU usage:)[ ]+([\d]+)(%)',
-               'CPU Freq': '(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[ ](\w+)',
-               'CPU Temp': '(?:CPU usage:[ ]+[\d]+%)[ ]+\(\d+[ ]\w+[ @]+(\d+)(\w)',
-               'RAM Usage': '(?:RAM usage:)[ ]+([\d]+)(%)',
-               'RAM Used': '(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
-               'RAM Total': '(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
-               'HDD Usage': '(?:HDD usage:)[ ]+([\d]+)(%)',
-               'HDD Used': '(?:HDD usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
-               'HDD Total': '(?:HDD usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
-               'PiHole Status': '(?:Pi-hole: )(\w+)',
-               'Site blocked': '(?:Blocking: )(\w+)',
-               'Request Blocked pct': '(?:Blocked: )(\w+)',
-               'Requests Blocked Total': '(?:Total: )(\w+)',
-               'Requests Total': '(?:Total: )\w+[ ]+of[ ]+(\d+)'
+    regexes = {'Hostname': r'(?:Hostname:)[ ]+(\w+)',
+               'Uptime': r'(?:Uptime:)[ ]+([\d]+ [\w,:]+ [\d:]+)',
+               'Task Load 1min': r'(?:Task Load:)[ ]+([\d\.]+)',
+               'Task Load 5min': r'(?:Task Load:)[ ]+[\d\.]+[ ]+([\d\.]+)',
+               'Task Load 15min': r'(?:Task Load:)[ ]+[\d\.]+[ ]+[\d\.]+[ ]+([\d\.]+)',
+               'Pihole Active Tasks': r'(?:Active:)[ ]+([\d]+)',
+               'Pihole Total Tasks': r'(?:Active:)[ ]+[\d]+ of ([\d]+)[ ]\w+',
+               'CPU Usage': r'(?:CPU usage:)[ ]+([\d]+)(%)',
+               'CPU Freq': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[x ]+([\d]+) ([\w]+)[ ]?@? ([\d]+)([a-z]+)\)',  # No cambiamos esta línea
+               'CPU Temp': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\(\d+[ ]\w+[ @]+(\d+)(\w)',
+               'RAM Usage': r'(?:RAM usage:)[ ]+([\d]+)(%)',
+               'RAM Used': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
+               'RAM Total': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
+               'HDD Usage': r'(?:HDD usage:)[ ]+([\d]+)(%)',
+               'HDD Used': r'(?:HDD usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
+               'HDD Total': r'(?:HDD usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
+               'PiHole Status': r'(?:Pi-hole: )(\w+)',
+               'Site blocked': r'(?:Blocking: )(\w+)',
+               'Request Blocked pct': r'(?:Blocked: )(\w+)',
+               'Requests Blocked Total': r'(?:Total: )(\w+)',
+               'Requests Total': r'(?:Total: )\w+[ ]+of[ ]+(\d+)'
                }
 
     stats_list = []
     for parser in regexes:
         try:
             stat_id = parser.strip().replace(' ', '_')
-            value = re.findall(regexes[parser], stat_string)[0]
-            if type(value) == tuple:
-                value, unit = value
-                value = convert_type(value)
-                stats_list.append({"name": parser, 'id': stat_id, 'value': value, 'unit': unit})
-            else:
-                value = clean_string(value.strip())
-                value = convert_type(value)
-                stats_list.append({"name": parser, 'id': stat_id, 'value': value})
+            value = re.findall(regexes[parser], stat_string)
+            
+            # Comprobamos si se obtuvo algún valor
+            if value:
+                value = value[0]
+                if type(value) == tuple:
+                    # Si es un conjunto de valores (como para 'CPU Freq')
+                    if len(value) == 6:  # Para 'CPU Freq', hay 6 valores esperados
+                        freq, core, unit, temp, temp_value, temp_unit = value
+                        value = freq  # Usamos solo la frecuencia en este caso
+                        stats_list.append({"name": parser, 'id': stat_id, 'value': value, 'unit': unit})
+                    else:
+                        value = clean_string(value[0].strip())
+                        value = convert_type(value)
+                        stats_list.append({"name": parser, 'id': stat_id, 'value': value})
+                else:
+                    value = clean_string(value.strip())
+                    value = convert_type(value)
+                    stats_list.append({"name": parser, 'id': stat_id, 'value': value})
+
         except Exception as e:
-            print('unable to parse: ', parser, ' error ', e)
+            print('Unable to parse:', parser, 'error:', e)
 
     return stats_list
 
