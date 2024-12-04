@@ -7,9 +7,14 @@ import os
 import json
 import re
 from pprint import pprint
+from colorama import Fore, Style
 
 DEBUG=False
-HOST="rpi2"
+TRACE=False
+
+HOST="proxmox_ova"
+MODEL="Xeon E5-2650v4"
+MANUFACTURER="Intel"
 
 """ configuration TODO move them to a separate files and prepare install script """
 topic_group_status_base = f'pihole/{HOST}/groups/state/'  # topic used to publish the status of the groups
@@ -19,7 +24,7 @@ topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
 env_path = '/etc/environment'  # path to the environment file with login credentials and address
-send_update_frequency = 30  # send an update every X seconds
+send_update_frequency = 5  # send an update every X seconds
 
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}
@@ -42,7 +47,7 @@ def on_connect(mqtt_client, userdata, flags, rc):
 
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    mqtt_client.subscribe([(f"pihole/#", 1)])
+    mqtt_client.subscribe([(f"pihole/{HOST}/#", 1)])
 
 
 def on_message(mqtt_client, userdata, message):
@@ -104,6 +109,9 @@ def send_blocking_status(status_string=None):
     status_sensor_topic = f"{topic_stat_base}PiHole_Status"
     client.publish(status_sensor_topic, payload=status_sensor_payload, qos=0, retain=False)
     stored_stats['PiHole_Status'] = status_sensor_payload
+    if DEBUG:
+        print(state_topic)
+        pprint(status_payload)
     return 0
 
 
@@ -146,6 +154,9 @@ def send_stat_status(stat_dict):
     topic = f"{topic_stat_base}{stat_dict['id']}"
     payload = stat_dict['value']
     client.publish(topic, payload=payload, qos=0, retain=False)
+    if DEBUG:
+        print(topic)
+        pprint(payload)
     # store the current value
     stored_stats[stat_dict['id']] = payload
 
@@ -215,9 +226,9 @@ def prepare_pihole_config_message():
                "device": {
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
-                   "manufacturer": "Raspberry",
-                   "model": "Pi RPI2",
-                   "name": "Raspberry Pi RPI2",
+                   "manufacturer": f"{MANUFACTURER}",
+                   "model": f"{MODEL}",
+                   "name": f"{MANUFACTURER} {MODEL}",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:lock",
                "state_topic": f"{topic_global_status_base}blocking",
@@ -238,9 +249,9 @@ def prepare_groups_config_message(group_name_string):
                "device": {
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
-                   "manufacturer": "Raspberry",
-                   "model": "Pi RPI2",
-                   "name": "Raspberry Pi RPI2",
+                   "manufacturer": f"{MANUFACTURER}",
+                   "model": f"{MODEL}",
+                   "name": f"{MANUFACTURER} {MODEL}",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:lock",
                "state_topic": f"{topic_group_status_base}{group_name_string}",
@@ -261,9 +272,9 @@ def prepare_stats_config_message(stat_dict):
                "device": {
                    "identifiers": f"PiHole_{mac_address_no_columns}",
                    "connections": [["mac", mac_address]],
-                   "manufacturer": "Raspberry",
-                   "model": "Pi RPI2",
-                   "name": "Raspberry Pi RPI2",
+                   "manufacturer": f"{MANUFACTURER}",
+                   "model": f"{MODEL}",
+                   "name": f"{MANUFACTURER} {MODEL}",
                    "sw_version": f"Debian {debian_version}"},
                "icon": "mdi:chart-areaspline",
                "~": topic_stat_base,
@@ -308,8 +319,8 @@ def parse_stats(stat_string):
                'Pihole Active Tasks': r'(?:Active:)[ ]+([\d]+)',
                'Pihole Total Tasks': r'(?:Active:)[ ]+[\d]+ of ([\d]+)[ ]\w+',
                'CPU Usage': r'(?:CPU usage:)[ ]+([\d]+)(%)',
-               'CPU Freq': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[x ]+([\d]+) ([\w]+)[ ]?@? ([\d]+)([a-z]+)\)',  # No cambiamos esta línea
-               'CPU Temp': r'(?:CPU usage:[ ]+[\d]+%)[ ]+\((\d+)[x ]+([\d]+) ([\w]+)[ ]?@? ([\d]+)([a-z]+)\)',
+               'CPU Freq': r"CPU usage: (\d+)%\s+\((\d+x\s+)?([\d.]+) (GHz|MHz) @ (\d+)c\)",
+               'CPU Temp': r"CPU usage: (\d+)%\s+\((\d+x\s+)?([\d.]+) (GHz|MHz) @ (\d+)c\)",
                'RAM Usage': r'(?:RAM usage:)[ ]+([\d]+)(%)',
                'RAM Used': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: (\d+)[ ]+(\w+)',
                'RAM Total': r'(?:RAM usage:[ ]+[\d]+\%)[ ]+\(Used: \d+[ ]+\w+[ ]+of[ ]+(\d+)[ ]+(\w+)',
@@ -328,21 +339,26 @@ def parse_stats(stat_string):
         try:
             stat_id = parser.strip().replace(' ', '_')
             value = re.findall(regexes[parser], stat_string)
-            
+            if TRACE:
+                print(f"STAT ID: {Fore.RED}{stat_id}{Style.RESET_ALL}"
+                      f" || REGEX: {Fore.RED}{regexes[parser]}{Style.RESET_ALL}")
             # Comprobamos si se obtuvo algún valor
             if value:
                 value = value[0]
+                if TRACE:
+                    print(f"TYPE VALUE: {type(value)} LEN: {len(value)} VALUE: ", end="")
+                    pprint(value)
                 if type(value) == tuple:
-                    if DEBUG:
-                        print(stat_id)
-                        pprint(value)
-                    # Si es un conjunto de valores (como para 'CPU Freq')
-                    if len(value) == 5 and stat_id == "CPU_Freq":  # Para 'CPU Freq', hay 6 valores esperados
-                        cores, freq, unit, temp, temp_unit = value
-                        stats_list.append({"name": parser, 'id': stat_id, 'value': f"{cores}x{freq}", 'unit': unit})
-                    if len(value) == 5 and stat_id == "CPU_Temp":
-                        cores, freq, unit, temp, temp_unit = value
-                        stats_list.append({"name": parser, 'id': stat_id, 'value': temp, 'unit': temp_unit})
+                    # Si es un conjunto de valores (como para 'CPU Freq') ('0', '', '2.7', 'GHz', '26')
+                    if len(value) == 5:  # Para 'CPU Freq', hay 6 valores esperados
+                        usage, empty, freq, unit, temp = value
+                        if stat_id == "CPU_Freq":
+                            value = freq
+                            unit = unit
+                        elif stat_id == "CPU_Temp":
+                            value = temp
+                            unit = 'c'
+                        stats_list.append({"name": parser, 'id': stat_id, 'value': value, 'unit': unit})
                     else:
                         value = clean_string(value[0].strip())
                         value = convert_type(value)
@@ -355,10 +371,6 @@ def parse_stats(stat_string):
         except Exception as e:
             print('Unable to parse:', parser, 'error:', e)
 
-    if (DEBUG):
-        pprint(stats_list)
-        print("\n--------------------------------------------------------\n\n\n")
-    
     return stats_list
 
 
@@ -366,6 +378,9 @@ def update_stat_pihole():
     stat_command = "pihole -c -e"
     stat_result = execute_command(stat_command)
     stats_list = parse_stats(' '.join(stat_result))
+    if TRACE:
+        pprint(stats_list)
+        print("\n\n\n")
     for st in stats_list:
         # of the stats was not picket-up for any reason before, send the config message and status
         if st['id'] not in stored_stats:
@@ -377,6 +392,8 @@ def update_stat_pihole():
             send_stat_status(st)
         # else check if the stat change, and update it if so
         elif stored_stats[st['id']] is None or st['value'] != stored_stats[st['id']]:
+            if TRACE:
+                pprint(st)
             send_stat_status(st)
 
 
