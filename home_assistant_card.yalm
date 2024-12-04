@@ -1,0 +1,53 @@
+type: grid
+cards:
+  - type: heading
+    heading: Pi-Hole Raspberry
+    heading_style: title
+  - type: gauge
+    entity: sensor.raspberry_pi_2_cpu_temp
+    grid_options:
+      columns: 3
+      rows: auto
+    name: CPU Temp
+  - type: gauge
+    entity: sensor.raspberry_pi_2_cpu_usage
+    grid_options:
+      columns: 3
+      rows: auto
+    name: CPU Usage
+  - type: gauge
+    entity: sensor.raspberry_pi_2_hdd_usage
+    grid_options:
+      columns: 3
+      rows: auto
+    name: HDD Usage
+    unit: "%"
+  - type: gauge
+    entity: sensor.raspberry_pi_2_ram_usage
+    grid_options:
+      columns: 3
+      rows: auto
+    name: RAM Usage
+    unit: "%"
+  - graph: line
+    type: sensor
+    entity: sensor.raspberry_pi_2_task_load_1_min
+    detail: 1
+    name: Load 1min
+  - graph: line
+    type: sensor
+    entity: sensor.raspberry_pi_2_task_load_5_min
+    detail: 1
+    name: Load 5min
+  - graph: line
+    type: sensor
+    entity: sensor.raspberry_pi_2_task_load_15_min
+    detail: 1
+    name: Load 15min
+  - type: tile
+    entity: sensor.raspberry_pi_2_requests_total
+    name: Requests
+  - type: tile
+    entity: sensor.raspberry_pi_2_requests_blocked_total
+    name: Blocked
+column_span: 1
