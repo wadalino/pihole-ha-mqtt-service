@@ -1,0 +1,246 @@
+mqtt:
+sensor:
+  # Sensores para proxmox_ova
+  - name: "Proxmox OVA Requests Total"
+    state_topic: "pihole/proxmox_ova/stats/state/Requests_Total"
+    unit_of_measurement: "requests"
+
+  - name: "Proxmox OVA Requests Blocked Total"
+    state_topic: "pihole/proxmox_ova/stats/state/Requests_Blocked_Total"
+    unit_of_measurement: "requests"
+
+  - name: "Proxmox OVA RAM Used"
+    state_topic: "pihole/proxmox_ova/stats/state/RAM_Used"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA RAM Usage"
+    state_topic: "pihole/proxmox_ova/stats/state/RAM_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA RAM Total"
+    state_topic: "pihole/proxmox_ova/stats/state/RAM_Total"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA Task Load 1 min"
+    state_topic: "pihole/proxmox_ova/stats/state/Task_Load_1min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA Task Load 5 min"
+    state_topic: "pihole/proxmox_ova/stats/state/Task_Load_5min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA Task Load 15 min"
+    state_topic: "pihole/proxmox_ova/stats/state/Task_Load_15min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA CPU Usage"
+    state_topic: "pihole/proxmox_ova/stats/state/CPU_Usage"
+    unit_of_measurement: "%"
+
+  - name: "Proxmox OVA CPU Temp"
+    state_topic: "pihole/proxmox_ova/stats/state/CPU_Temp"
+    unit_of_measurement: "°C"
+
+  - name: "Proxmox OVA CPU Freq"
+    state_topic: "pihole/proxmox_ova/stats/state/CPU_Freq"
+    unit_of_measurement: "GHz"
+
+  - name: "Proxmox OVA HDD Used"
+    state_topic: "pihole/proxmox_ova/stats/state/HDD_Used"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA HDD Usage"
+    state_topic: "pihole/proxmox_ova/stats/state/HDD_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA HDD Total"
+    state_topic: "pihole/proxmox_ova/stats/state/HDD_Total"
+    unit_of_measurement: "MB"
+
+# Sensores para proxmox_ova
+  - name: "Proxmox OVA2 Requests Total"
+    state_topic: "pihole/proxmox_ova_2/stats/state/Requests_Total"
+    unit_of_measurement: "requests"
+
+  - name: "Proxmox OVA2 Requests Blocked Total"
+    state_topic: "pihole/proxmox_ova_2/stats/state/Requests_Blocked_Total"
+    unit_of_measurement: "requests"
+
+  - name: "Proxmox OVA2 RAM Used"
+    state_topic: "pihole/proxmox_ova_2/stats/state/RAM_Used"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA2 RAM Usage"
+    state_topic: "pihole/proxmox_ova_2/stats/state/RAM_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA2 RAM Total"
+    state_topic: "pihole/proxmox_ova_2/stats/state/RAM_Total"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA2 Task Load 1 min"
+    state_topic: "pihole/proxmox_ova_2/stats/state/Task_Load_1min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA2 Task Load 5 min"
+    state_topic: "pihole/proxmox_ova_2/stats/state/Task_Load_5min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA2 Task Load 15 min"
+    state_topic: "pihole/proxmox_ova_2/stats/state/Task_Load_15min"
+    unit_of_measurement: "load"
+
+  - name: "Proxmox OVA2 CPU Usage"
+    state_topic: "pihole/proxmox_ova_2/stats/state/CPU_Usage"
+    unit_of_measurement: "%"
+
+  - name: "Proxmox OVA2 CPU Temp"
+    state_topic: "pihole/proxmox_ova_2/stats/state/CPU_Temp"
+    unit_of_measurement: "°C"
+
+  - name: "Proxmox OVA2 CPU Freq"
+    state_topic: "pihole/proxmox_ova_2/stats/state/CPU_Freq"
+    unit_of_measurement: "GHz"
+
+  - name: "Proxmox OVA2 HDD Used"
+    state_topic: "pihole/proxmox_ova_2/stats/state/HDD_Used"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA2 HDD Usage"
+    state_topic: "pihole/proxmox_ova_2/stats/state/HDD_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "Proxmox OVA2 HDD Total"
+    state_topic: "pihole/proxmox_ova_2/stats/state/HDD_Total"
+    unit_of_measurement: "MB"
+
+switch:
+  # PIHOLE OVA
+  - name: "OVA PiHole Global Control"
+    command_topic: "pihole/proxmox_ova/set"
+    state_topic: "pihole/proxmox_ova/state/blocking"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block All"
+    command_topic: "pihole/proxmox_ova/groups/set/block_all"
+    state_topic: "pihole/proxmox_ova/groups/state/block_all"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block Facebook"
+    command_topic: "pihole/proxmox_ova/groups/set/block_facebook"
+    state_topic: "pihole/proxmox_ova/groups/state/block_facebook"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block Instagram"
+    command_topic: "pihole/proxmox_ova/groups/set/block_instagram"
+    state_topic: "pihole/proxmox_ova/groups/state/block_instagram"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block TikTok"
+    command_topic: "pihole/proxmox_ova/groups/set/block_tiktok"
+    state_topic: "pihole/proxmox_ova/groups/state/block_tiktok"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block YouTube"
+    command_topic: "pihole/proxmox_ova/groups/set/block_youtube"
+    state_topic: "pihole/proxmox_ova/groups/state/block_youtube"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block Porn"
+    command_topic: "pihole/proxmox_ova/groups/set/block_porn"
+    state_topic: "pihole/proxmox_ova/groups/state/block_porn"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA PiHole Block Test"
+    command_topic: "pihole/proxmox_ova/groups/set/block_test"
+    state_topic: "pihole/proxmox_ova/groups/state/block_test"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+ # PIHOLE OVA2
+  - name: "OVA2 PiHole Global Control"
+    command_topic: "pihole/proxmox_ova_2/set"
+    state_topic: "pihole/proxmox_ova_2/state/blocking"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block All"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_all"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_all"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block Facebook"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_facebook"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_facebook"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block Instagram"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_instagram"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_instagram"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block TikTok"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_tiktok"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_tiktok"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block YouTube"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_youtube"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_youtube"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block Porn"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_porn"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_porn"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "OVA2 PiHole Block Test"
+    command_topic: "pihole/proxmox_ova_2/groups/set/block_test"
+    state_topic: "pihole/proxmox_ova_2/groups/state/block_test"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"    
