@@ -30,12 +30,22 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
 4) Variables will be stored into file **'/env/ha-mqtt-environment'**, this file will be loaded by **'ha-mqtt-service.py'**  
   
   
-5) There are two variables into downloaded **'mqtt-service.py'** file placed on **'ha-mqtt-service'** directory, called *DEBUG*   
-   and *TRACE* set as False by default. You can change them to True if you want to set in Debug or Trace MODE. Please   
-   note that write much information and log can grow too much -- remember to set to False when set to Production.  
+5) There are two variables into downloaded **'mqtt-service.py'** file placed on **'ha-mqtt-service'** directory, called *DEBUG* and *TRACE* set as False by default. You can change them to True if you want to set in Debug or Trace MODE. Please note that write much information and log can grow too much -- remember to set to False when set to Production.  
  
   
-6) The script check if Python3 is installed in the system, also check for required python packages needed.
+6) The script check if Python3 is installed in the system, also check for required python packages required.
+
+
+7) After script execution there are two new directories created in '/root/' folder:
+   ```
+   - ha-mqtt-service : this folder contents the python3 script
+   - outFiles : this folder contents two files
+      - mqtt-ha.service : this file controls the daemon execution
+      - mqtt.yaml : the content of this file needs to be included in mqtt section of Home Assistant
+      - card.yaml : this is a card sample that can be included to Home Assistant panel
+   ```
+
+8) 
 *****************
 
    ```
