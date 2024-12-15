@@ -8,7 +8,9 @@ import json
 import re
 from pprint import pprint
 from colorama import Fore, Style
+from dotenv import load_dotenv
 
+load_dotenv()
 
 DEBUG=False
 TRACE=False
@@ -16,30 +18,12 @@ TRACE=False
 """ Configuration Environment File """
 env_path = '/etc/ha-mqtt-environment'  # path to the environment file with login credentials and address
 
-if not os.path.exists(env_path):
-    print("Environment File Not Found")
-    exit(0)
+HOST = os.getenv('PIHOST')
+MODEL = os.getenv('MODEL')
+MANUFACTURER = os.getenv('MANUFACTURER')
 
-DEFS = {}
-with open(env_path) as env_var:
-    file = env_var.read()
-    for item in file.splitlines():
-        if item.strip() and not item.startswith("#"):
-            DEFS[item.split('=')[0]] = item.split('=')[1]
+UPDATE_TIME = os.getenv('UPDATE_TIME')
 
-# Now, check if the required environment variables exist
-required_vars = ['PIHOST', 'MODEL', 'MANUFACTURER', 'UPDATE_TIME']
-missing_vars = [var for var in required_vars if var not in DEFS]
-
-if missing_vars:
-    print(f"Missing the following environment variables: {', '.join(missing_vars)}")
-    exit(0)
-
-HOST = DEFS['PIHOST'].replace('"', '').replace("'", "")
-MODEL = DEFS['MODEL'].replace('"', '').replace("'", "")
-MANUFACTURER = DEFS['MANUFACTURER'].replace('"', '').replace("'", "")
-
-UPDATE_TIME = DEFS['UPDATE_TIME'].replace('"', '').replace("'", "")
 
 """ configuration TODO move them to a separate files and prepare install script """
 topic_group_status_base = f'pihole/{HOST}/groups/state/'  # topic used to publish the status of the groups
@@ -452,25 +436,10 @@ config_messages.append({'topic': f'homeassistant/switch/PiHole/blocking/config',
                         'payload': json.dumps(pihole_payload)})
 
 """ load the connection credentials, address and port from environment file """
-user = os.environ.get('MQTT_USER')
-pasw = os.environ.get('MQTT_PASSWORD')
-addr = os.environ.get('MQTT_SERVER')
-port = os.environ.get('MQTT_PORT')
-port = int(port) if port is not None else None
-
-""" when running as s service, read directly from the file instead """
-if addr is None:
-    envdict = {}
-    with open(env_path) as env_var:
-        file = env_var.read()
-        for item in file.splitlines():
-            envdict[item.split('=')[0]] = item.split('=')[1]
-    user = envdict['MQTT_USER'].replace('"', '').replace("'", "")
-    pasw = envdict['MQTT_PASSWORD'].replace('"', '').replace("'", "")
-    addr = envdict['MQTT_SERVER'].replace('"', '').replace("'", "")
-    port = envdict['MQTT_PORT'].replace('"', '').replace("'", "")
-
-""" convert the port number as int """
+user = os.getenv('MQTT_USER')
+pasw = os.getenv('MQTT_PASSWORD')
+addr = os.getenv('MQTT_SERVER')
+port = os.getenv('MQTT_PORT')
 port = int(port) if port is not None else None
 
 """ connect to the MQTT server """

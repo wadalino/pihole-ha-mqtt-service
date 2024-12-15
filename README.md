@@ -38,49 +38,33 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
 
 7) After script execution there are two new directories created in '/root/' folder:
    ```
-   - ha-mqtt-service : this folder contents the python3 script
+   - ha-mqtt-service : this folder contents the python3 script and .env
+      - mqtt-service.py : main script
+      - .env : file with variables 
    - outFiles : this folder contents two files
       - mqtt-ha.service : this file controls the daemon execution
       - mqtt.yaml : the content of this file needs to be included in mqtt section of Home Assistant
       - card.yaml : this is a card sample that can be included to Home Assistant panel
    ```
 
-8) 
-*****************
-
+8) File mqtt-ha.service is necessary to be moved to /etc/systemd/system to be installed as service (taken from https://medium.com/codex/setup-a-python-script-as-a-service-through-systemctl-systemd-f0cc55a42267):
    ```
-   wget https://raw.githubusercontent.com/Andrec83/pihole-ha-mqtt-service/main/requirements.txt && sudo pip3 install -r requirements.txt
+   sudo mv /root/outFiles/mqtt-ha.service /etc/systemd/system/
    ```
-6) test the script:
-   ```
-   sudo python3 mqtt-service.py
-   ```
-   you should see in your Home Assistant the new groups with the ability to enable or disable them
-7) if the test above worked well, install the script as a service (taken from https://medium.com/codex/setup-a-python-script-as-a-service-through-systemctl-systemd-f0cc55a42267):
-   ```
-   sudo nano /etc/systemd/system/mqtt-ha.service
-   ```
-   ```
-    [Unit]
-    Description=Update groups from HA via MQTT service
-    After=multi-user.target
-    [Service]
-    Type=simple
-    Restart=always
-    ExecStart=/usr/bin/python3 /root/mqtt-service.py
-    [Install]
-    WantedBy=multi-user.target
-   ```
-8) enable and start the service:
+   
+9) enable and start the service:
    ```
    sudo systemctl daemon-reload
    sudo systemctl enable mqtt-ha.service
    sudo systemctl start mqtt-ha.service
-   ```
+   ```   
+
 10) check that everything is working well:
     ```
     sudo systemctl status mqtt-ha.service
     ```
+    
+*****************
 
 ## Requeriments
 Please note that to use this software is necessary to have installed Python3 with packages specified in file  
@@ -89,8 +73,13 @@ Please note that to use this software is necessary to have installed Python3 wit
 - paho-mqtt
 - colorama
   ```
+
+## Thanks to 
+Thanks to [@Andrec83](https://github.com/Andrec83) for creation of this script.
+
+### ToDo
 The script can certainly be improved and generalised, happy for any contribution to come along. 
-I need to improve the way I read info from the env file and manage cases where MQTT user and PWD are not necessary. 
+~~I need to improve the way I read info from the env file and manage cases where MQTT user and PWD are not necessary.~~ 
 I also need to find a way to update PiHole front-end when a group i enabled/disabled from HomeAssistant.
 
 Credit to https://community.home-assistant.io/t/pihole-5-enable-disable-groups-block-internet/268927 for the insipration on how to manage PiHole via bash, 

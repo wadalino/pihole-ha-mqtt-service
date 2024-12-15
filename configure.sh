@@ -135,7 +135,7 @@ check_python
 check_packages
 
 ROOT_DIR="/root"
-ENV_FILE="ha-mqtt-environment"
+ENV_FILE=".env"
 HA_MQTT_DIR="ha-mqtt-service"
 OUTFILES_DIR="outFiles"
 
@@ -171,7 +171,7 @@ update_time=$(ask_number "Please enter delay in seconds that server contact with
 echo
 
 # Create the .env file with the collected information
-env_file="/etc/$ENV_FILE"
+env_file="$ROOT_DIR/$HA_MQTT_DIR/$ENV_FILE"
 # Write the environment variables to the file
 echo "Creating environment file at $env_file"
 echo "MQTT_USER=\"$mqtt_user\"" > $env_file
@@ -201,5 +201,5 @@ ExecStart=/usr/bin/python3 $ROOT_DIR/$HA_MQTT_DIR/mqtt-service.py
 WantedBy=multi-user.target
 EOF
 
-
+curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml | sed 's/{HOST}/$pihost/g' > xx_modified.yaml
 
