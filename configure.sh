@@ -83,6 +83,14 @@ check_python() {
   fi
 }
 
+check_systemctl() {
+  if command -v systemctl &>/dev/null; then
+      return 0  # true (systemctl is installed)
+  else
+      return 1  # false (systemctl is not installed)
+  fi
+}
+
 check_packages() {
       # Check if paho-mqtt is installed via pip3
     if ! pip3 show paho-mqtt &>/dev/null; then
@@ -183,6 +191,8 @@ echo "MODEL=\"$model\"" >> $env_file
 echo "MANUFACTURER=\"$manufacturer\"" >> $env_file
 echo "UPDATE_TIME=$update_time" >> $env_file
 
+
+
 # Service file
 SERVICE_PATH="$ROOT_DIR/$OUTFILES_DIR/mqtt-ha.service"
 
@@ -201,5 +211,25 @@ ExecStart=/usr/bin/python3 $ROOT_DIR/$HA_MQTT_DIR/mqtt-service.py
 WantedBy=multi-user.target
 EOF
 
-curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml | sed 's/{HOST}/$pihost/g' > xx_modified.yaml
+# Call the function
+check_systemctl
+
+# Check the return status of the function
+if [ $? -eq 0 ]; then
+    echo -e "Daemon control file created ..."
+    mv $SERVICE_PATH /etc/systemd/system/
+    echo -e "Reloading daemons ..."
+    systemctl daemon-reload
+    echo -e "Enabling daemon ..."
+    systemctl enable mqtt-ha.service
+    echo -e "Starting daemon ..."
+    systemctl start mqtt-ha.service
+
+else
+    echo "Systemctl is not installed, service file is located in $SERVICE_PATH"
+fi
+
+echo -e "YAML files are located in \033[31m'$ROOT_DIR/$OUTFILES_DIR'\033[0m"
+curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml | sed "s/{HOST}/$pihost/g" > "$ROOT_DIR/$OUTFILES_DIR/mqtt.yaml"
+curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/home_assistant_card.yaml | sed "s/{HOST}/$pihost/g" > "$ROOT_DIR/$OUTFILES_DIR/card.yaml"
 

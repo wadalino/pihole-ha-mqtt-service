@@ -52,7 +52,7 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
    sudo mv /root/outFiles/mqtt-ha.service /etc/systemd/system/
    ```
    
-9) enable and start the service:
+9) Enable and start the service:
    ```
    sudo systemctl daemon-reload
    sudo systemctl enable mqtt-ha.service
