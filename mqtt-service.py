@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import subprocess
 import sys
 import paho.mqtt.client as mqtt
@@ -14,7 +14,7 @@ DEBUG=False
 TRACE=False
 
 """ Configuration Environment File """
-env_path = '/etc/environment'  # path to the environment file with login credentials and address
+env_path = '/etc/ha-mqtt-environment'  # path to the environment file with login credentials and address
 
 if not os.path.exists(env_path):
     print("Environment File Not Found")

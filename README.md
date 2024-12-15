@@ -7,29 +7,37 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
 
 
 
-To install on Raspberry PI:
-1) download the file mqtt-service.py on you Raspberry PI. I put mine on the root home directory:
+## automated installation
+1) exec .sh file from github with sudo or as root
    ```
-   cd /root/ && sudo wget https://raw.githubusercontent.com/Andrec83/pihole-ha-mqtt-service/main/mqtt-service.py
+   sudo bash <(curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/main/configure.sh)
    ```
-3) add to the file /etc/environment the following variables:
+2) script ask for following variables:
    ```
-   MQTT_USER="<the user that is authorised to interact with the MQTT server>"
-   MQTT_PASSWORD="<the password that authenticates the user on the MQTT server>"
-   MQTT_SERVER="<server IP address, in the form of 192.168.X.X>"
-   MQTT_PORT=<the port of the MQTT server>
+   MQTT_USER: the user that is authorised to interact with the MQTT server
+   MQTT_PASSWORD: the password that authenticates the user on the MQTT server
+   MQTT_SERVER: server IP address, in the form of X.X.X.X
+   MQTT_PORT: the port of the MQTT server
    ```
-4) amend the script mqtt-service.py, at the top of the script you should change the variables to your liking:
+3) script also ask for variables:
    ```
-   topic_group_set_base = 'pihole/groups/set/'  # topic used to receive commands from HomeAssistant
-   topic_global_status_base = 'pihole/state/' # topic used to publish the status of pihole filtering
-   topic_global_set_base = 'pihole/set'  # topic used to receive the enable/disable command from HA
-   group_name_filter = 'block'  # > I named all the groups that I want to manage via Home Assistant "block-xxx" or "xxx-block-xxx", therefore filtering the group by the word "block" limit the entries in HA to only what I need to control
-   topic_stat_base = 'pihole/stats/state/'  # topic used to publish the status of the statistics
-   env_path = '/etc/environment'  # path to the environment file with login credentials and address
-   send_update_frequency = 5  # send an update every X seconds
-   ```
-5) download the file requirements.txt and install the dependencies:
+   HOSTNAME: the hostname to send via mqtt of 'pihole' server
+   MODEL: Hardware device model, per example RPI 2
+   MANUFACTURER: The manufacturer of the device, per example Raspberry
+   UPDATE_TIME: Frequency update time to send a new MQTT messages
+   ```  
+   
+4) Variables will be stored into file **'/env/ha-mqtt-environment'**, this file will be loaded by **'ha-mqtt-service.py'**  
+  
+  
+5) There are two variables into downloaded **'mqtt-service.py'** file placed on **'ha-mqtt-service'** directory, called *DEBUG*   
+   and *TRACE* set as False by default. You can change them to True if you want to set in Debug or Trace MODE. Please   
+   note that write much information and log can grow too much -- remember to set to False when set to Production.  
+ 
+  
+6) The script check if Python3 is installed in the system, also check for required python packages needed.
+*****************
+
    ```
    wget https://raw.githubusercontent.com/Andrec83/pihole-ha-mqtt-service/main/requirements.txt && sudo pip3 install -r requirements.txt
    ```
@@ -64,7 +72,13 @@ To install on Raspberry PI:
     sudo systemctl status mqtt-ha.service
     ```
 
-
+## Requeriments
+Please note that to use this software is necessary to have installed Python3 with packages specified in file  
+[requirements.txt](https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/requirements.txt):
+  ```
+- paho-mqtt
+- colorama
+  ```
 The script can certainly be improved and generalised, happy for any contribution to come along. 
 I need to improve the way I read info from the env file and manage cases where MQTT user and PWD are not necessary. 
 I also need to find a way to update PiHole front-end when a group i enabled/disabled from HomeAssistant.

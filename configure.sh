@@ -20,7 +20,7 @@ ask_number() {
       echo "$input"  # Return the entered value if it's a number
       return
     else
-      echo "Please enter a valid number."  # Error message if not a valid number
+      echo -e "Please enter a \033[1;33mvalid\033[0m number."  # Error message if not a valid number
     fi
   done
 }
@@ -40,30 +40,138 @@ ask_ip() {
       echo "$input"  # Return the entered value if it's a valid IP address
       return
     else
-      echo "Please enter a valid IPv4 address."  # Error message if not a valid IP address
+      echo -e "Please enter a \033[1;33mvalid\033[0m IPv4 address."  # Error message if not a valid IP address
     fi
   done
 }
 
+# Function to check and create directory
+check_and_create_dir() {
+    local DIR="$1"  # Take directory name as an argument
+
+    # Check if directory exists
+    if [ -d "$DIR" ]; then
+        echo -e "Directory \033[0;33m'$DIR'\033[0m already exists."
+    else
+        # Create directory or exit
+        mkdir "$DIR" || { echo -e "Failed to create directory \033[0;33m'$DIR'\033[0m. Exiting."; exit 1; }
+        echo -e "Directory \033[0;33m'$DIR'\033[0m created successfully."
+    fi
+}
+
+# Function to download a file
+download_file() {
+    local URL="$1"           # URL of the file to download
+    local OUTPUT="$2"        # Local path to save the file
+
+    # Use curl to download the file
+    curl -o "$OUTPUT" "$URL" --fail --silent --show-error
+    if [ $? -ne 0 ]; then
+        echo -e "Failed to download file from $URL. Exiting."
+        return 1
+    fi
+
+    echo -e "File downloaded successfully to  \033[0;33m$OUTPUT\033[0m."
+    return 0
+}
+
+
+check_python() {
+  if ! command -v python3 &>/dev/null; then
+      echo -e "Python is \033[0;33mnot installed\033[0m, can't continue."
+      exit 1
+  fi
+}
+
+check_packages() {
+      # Check if paho-mqtt is installed via pip3
+    if ! pip3 show paho-mqtt &>/dev/null; then
+        pip_paho_installed=false
+    else
+        pip_paho_installed=true
+    fi
+
+    # Check if colorama is installed via pip3
+    if ! pip3 show colorama &>/dev/null; then
+        pip_colorama_installed=false
+    else
+        pip_colorama_installed=true
+    fi
+
+    # Check if python3-paho-mqtt is installed via apt
+    if ! dpkg -l | grep -q python3-paho-mqtt; then
+        apt_paho_installed=false
+    else
+        apt_paho_installed=true
+    fi
+
+    # Check if python3-colorama is installed via apt
+    if ! dpkg -l | grep -q python3-colorama; then
+        apt_colorama_installed=false
+    else
+        apt_colorama_installed=true
+    fi
+
+    if [ "$pip_paho_installed" = false ] && [ "$apt_paho_installed" = false ]; then
+        echo -e "Package 'paho-mqtt' is not installed, can't continue"
+        exit 1
+    fi
+    if [ "$pip_colorama_installed" = false ] && [ "$apt_colorama_installed" = false ]; then
+        echo -e "Package 'colorama' is not installed, can't continue"
+        exit 1
+    fi
+}
+
+echo
+
 # Check if the script is running as root or with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo -e "\nThis script is not running as root. You might need sudo privileges.\n"
+  echo -e "This script is not running as \033[1;33mroot\033[0m. You might need sudo privileges.\n"
   exit
 fi
 
-pihost=$(ask "Please enter a HostName that you like to use, please it need to be a single word without special chars or spaces: ")
+# Check for python3
+check_python
+check_packages
+
+ROOT_DIR="/root"
+ENV_FILE="ha-mqtt-environment"
+HA_MQTT_DIR="ha-mqtt-service"
+OUTFILES_DIR="outFiles"
+
+# check directories [outFiles, ha-mqtt-service]
+check_and_create_dir "$ROOT_DIR/$HA_MQTT_DIR"
+check_and_create_dir "$ROOT_DIR/$OUTFILES_DIR"
+
+download_file "https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/main/mqtt-service.py" "$ROOT_DIR/$HA_MQTT_DIR/mqtt-service.py"
+
+echo -e "
+
+File named \033[1;34m'mqtt-service.py'\033[0m was downloaded to folder \033[1;34m'ha-mqtt-service'\033[0m
+this file contains the \033[31mpython code\033[0m to execute the service that sends updates via mqtt.
+
+
+"
+
+pihost=$(ask "Please enter a HostName to use, needs to be a single word with no special chars or spaces: ")
+echo
 model=$(ask "Please enter the model of your device: ")
+echo
 manufacturer=$(ask "Please enter the Manufacturer of your hardware: ")
-
-mqtt_user=$(ask "Please enter a MQTT >> User: ")
-mqtt_password=$(ask "Please enter a MQTT >> Password: ")
-mqtt_server=$(ask_ip "Please enter a MQTT >> Server IP: ")
-mqtt_port=$(ask_number "Please enter a MQTT >> Server Port: ")
-
+echo
+mqtt_user=$(ask "Please enter the MQTT User: ")
+echo
+mqtt_password=$(ask "Please enter the MQTT Password: ")
+echo
+mqtt_server=$(ask_ip "Please enter the MQTT Server IP: ")
+echo
+mqtt_port=$(ask_number "Please enter the MQTT Server Port: ")
+echo
 update_time=$(ask_number "Please enter delay in seconds that server contact with MQTT Broker: ")
+echo
 
 # Create the .env file with the collected information
-env_file="outFiles/environment"
+env_file="/etc/$ENV_FILE"
 # Write the environment variables to the file
 echo "Creating environment file at $env_file"
 echo "MQTT_USER=\"$mqtt_user\"" > $env_file
@@ -76,7 +184,7 @@ echo "MANUFACTURER=\"$manufacturer\"" >> $env_file
 echo "UPDATE_TIME=$update_time" >> $env_file
 
 # Service file
-SERVICE_PATH="outFiles/mqtt-ha.service"
+SERVICE_PATH="$ROOT_DIR/$OUTFILES_DIR/mqtt-ha.service"
 
 # add specific content to file
 cat <<EOF > $SERVICE_PATH
@@ -87,9 +195,11 @@ After=multi-user.target
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/python3 /root/mqtt-service.py
+ExecStart=/usr/bin/python3 $ROOT_DIR/$HA_MQTT_DIR/mqtt-service.py
 
 [Install]
 WantedBy=multi-user.target
 EOF
+
+
 
