@@ -32,7 +32,7 @@ topic_global_status_base = f'pihole/{HOST}/state/' # topic used to publish the s
 topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable/disable command from HA
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
-send_update_frequency = UPDATE_TIME  # send an update every X seconds
+send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}
