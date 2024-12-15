@@ -113,11 +113,11 @@ check_packages() {
     fi
 
     if [ "$pip_paho_installed" = false ] && [ "$apt_paho_installed" = false ]; then
-        echo -e "Package 'paho-mqtt' is not installed, can't continue"
+        echo -e "Package 'paho-mqtt' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
     fi
     if [ "$pip_colorama_installed" = false ] && [ "$apt_colorama_installed" = false ]; then
-        echo -e "Package 'colorama' is not installed, can't continue"
+        echo -e "Package 'colorama' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
     fi
 }
