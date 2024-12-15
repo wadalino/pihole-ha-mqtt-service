@@ -28,7 +28,7 @@ with open(env_path) as env_var:
             DEFS[item.split('=')[0]] = item.split('=')[1]
 
 # Now, check if the required environment variables exist
-required_vars = ['PIHOST', 'MODEL', 'MANUFACTURER']
+required_vars = ['PIHOST', 'MODEL', 'MANUFACTURER', 'UPDATE_TIME']
 missing_vars = [var for var in required_vars if var not in DEFS]
 
 if missing_vars:
@@ -39,6 +39,8 @@ HOST = DEFS['PIHOST'].replace('"', '').replace("'", "")
 MODEL = DEFS['MODEL'].replace('"', '').replace("'", "")
 MANUFACTURER = DEFS['MANUFACTURER'].replace('"', '').replace("'", "")
 
+UPDATE_TIME = DEFS['UPDATE_TIME'].replace('"', '').replace("'", "")
+
 """ configuration TODO move them to a separate files and prepare install script """
 topic_group_status_base = f'pihole/{HOST}/groups/state/'  # topic used to publish the status of the groups
 topic_group_set_base = f'pihole/{HOST}/groups/set/'  # topic used to receive commands from HomeAssistant
@@ -46,7 +48,7 @@ topic_global_status_base = f'pihole/{HOST}/state/' # topic used to publish the s
 topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable/disable command from HA
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
-send_update_frequency = 5  # send an update every X seconds
+send_update_frequency = UPDATE_TIME  # send an update every X seconds
 
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}

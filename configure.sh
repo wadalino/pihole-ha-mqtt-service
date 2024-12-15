@@ -60,8 +60,10 @@ mqtt_password=$(ask "Please enter a MQTT >> Password: ")
 mqtt_server=$(ask_ip "Please enter a MQTT >> Server IP: ")
 mqtt_port=$(ask_number "Please enter a MQTT >> Server Port: ")
 
+update_time=$(ask_number "Please enter delay in seconds that server contact with MQTT Broker: ")
+
 # Create the .env file with the collected information
-env_file="environment"
+env_file="outFiles/environment"
 # Write the environment variables to the file
 echo "Creating environment file at $env_file"
 echo "MQTT_USER=\"$mqtt_user\"" > $env_file
@@ -71,9 +73,10 @@ echo "MQTT_PORT=$mqtt_port" >> $env_file
 echo "PIHOST=\"$pihost\"" >> $env_file
 echo "MODEL=\"$model\"" >> $env_file
 echo "MANUFACTURER=\"$manufacturer\"" >> $env_file
+echo "UPDATE_TIME=$update_time" >> $env_file
 
 # Service file
-SERVICE_PATH="mqtt-ha.service"
+SERVICE_PATH="outFiles/mqtt-ha.service"
 
 # add specific content to file
 cat <<EOF > $SERVICE_PATH
