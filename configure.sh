@@ -92,7 +92,7 @@ check_systemctl() {
 }
 
 check_packages() {
-      # Check if paho-mqtt is installed via pip3
+    # Check if paho-mqtt is installed via pip3
     if ! pip3 show paho-mqtt &>/dev/null; then
         pip_paho_installed=false
     else
@@ -104,6 +104,13 @@ check_packages() {
         pip_colorama_installed=false
     else
         pip_colorama_installed=true
+    fi
+
+    # Check if dotenv is installed via pip3
+    if ! pip3 show python-dotenv &>/dev/null; then
+        pip_dotenv_installed=false
+    else
+        pip_dotenv_installed=true
     fi
 
     # Check if python3-paho-mqtt is installed via apt
@@ -120,12 +127,23 @@ check_packages() {
         apt_colorama_installed=true
     fi
 
+    # Check if python3-dotenv is installed via apt
+    if ! dpkg -l | grep -q python3-dotenv; then
+        apt_dotenv_installed=false
+    else
+        apt_dotenv_installed=true
+    fi
+
     if [ "$pip_paho_installed" = false ] && [ "$apt_paho_installed" = false ]; then
         echo -e "Package 'paho-mqtt' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
     fi
     if [ "$pip_colorama_installed" = false ] && [ "$apt_colorama_installed" = false ]; then
         echo -e "Package 'colorama' is not installed, \033[1;33mcan't continue\033[0m\n"
+        exit 1
+    fi
+    if [ "$pip_dotenv_installed" = false ] && [ "$apt_dotenv_installed" = false ]; then
+        echo -e "Package 'dotenv' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
     fi
 }
