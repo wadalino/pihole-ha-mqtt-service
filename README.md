@@ -2,9 +2,7 @@
 Pihole service that exposes group management (enable/disable) to Home Assistant with autoconfiguration.
 It also exposes statistics as sensors, and it updates automatically (every 5 second if not set otherwise) when a group is enabled/disabled from the PiHole front-end itself.
 
-![Parental control](https://github.com/wadalino/pihole-ha-mqtt-service/blob/main/card.png)
-![Pihole reporting](https://github.com/wadalino/pihole-ha-mqtt-service/blob/main/card.switches.png)
-
+![Parental control](https://github.com/wadalino/pihole-ha-mqtt-service/blob/main/cards.png)
 
 
 ## Automated installation
