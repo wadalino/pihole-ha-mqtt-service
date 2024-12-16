@@ -34,7 +34,7 @@ topic_global_status_base = f'pihole/{HOST}/state/' # topic used to publish the s
 topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable/disable command from HA
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
-topic_stats_overtime = f'pihole/{HOST}/overtime/' # topic used for stats
+topic_stats_overtime = f'pihole/{HOST}/overtime' # topic used for stats
 
 send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 
@@ -209,6 +209,7 @@ def send_stats_overtime():
     topic = f"{topic_stats_overtime}"
     data = get_stats_overtime()
     publish_individual_values(topic, data)
+    client.publish(f"{topic}/domains_json", payload=data, qos=0, retain=True)
 
 def execute_command(command_string):
     """

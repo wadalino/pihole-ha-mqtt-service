@@ -1,0 +1,136 @@
+
+sensor:
+  - name: "{HOST} Requests Total"
+    state_topic: "pihole/{HOST}/stats/state/Requests_Total"
+    unit_of_measurement: "requests"
+
+  - name: "{HOST} Requests Blocked Total"
+    state_topic: "pihole/{HOST}/stats/state/Requests_Blocked_Total"
+    unit_of_measurement: "requests"
+
+  - name: "{HOST} RAM Used"
+    state_topic: "pihole/{HOST}/stats/state/RAM_Used"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} RAM Usage"
+    state_topic: "pihole/{HOST}/stats/state/RAM_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} RAM Total"
+    state_topic: "pihole/{HOST}/stats/state/RAM_Total"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} Task Load 1 min"
+    state_topic: "pihole/{HOST}/stats/state/Task_Load_1min"
+    unit_of_measurement: "load"
+
+  - name: "{HOST} Task Load 5 min"
+    state_topic: "pihole/{HOST}/stats/state/Task_Load_5min"
+    unit_of_measurement: "load"
+
+  - name: "{HOST} Task Load 15 min"
+    state_topic: "pihole/{HOST}/stats/state/Task_Load_15min"
+    unit_of_measurement: "load"
+
+  - name: "{HOST} CPU Usage"
+    state_topic: "pihole/{HOST}/stats/state/CPU_Usage"
+    unit_of_measurement: "%"
+
+  - name: "{HOST} CPU Temp"
+    state_topic: "pihole/{HOST}/stats/state/CPU_Temp"
+    unit_of_measurement: "°C"
+
+  - name: "{HOST} CPU Freq"
+    state_topic: "pihole/{HOST}/stats/state/CPU_Freq"
+    unit_of_measurement: "GHz"
+
+  - name: "{HOST} HDD Used"
+    state_topic: "pihole/{HOST}/stats/state/HDD_Used"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} HDD Usage"
+    state_topic: "pihole/{HOST}/stats/state/HDD_Usage"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} HDD Total"
+    state_topic: "pihole/{HOST}/stats/state/HDD_Total"
+    unit_of_measurement: "MB"
+
+  - name: "{HOST} Over Time Domains"
+    state_topic: "pihole/{HOST}/overtime/domains_json"
+    value_template: "0"
+    json_attributes_topic: "pihole/{HOST}/overtime/domains_json"
+    json_attributes_template: "{{ value_json | to_json }}"
+
+  - name: "{HOST} Over Time Ads"
+    state_topic: "pihole/{HOST}/overtime/ads_json"
+    value_template: "0"
+    json_attributes_topic: "pihole/{HOST}/overtime/ads_json"
+    json_attributes_template: "{{ value_json | to_json }}"
+
+switch:
+  # PIHOLE OVA
+  - name: "{HOST} Global Control"
+    command_topic: "pihole/{HOST}/set"
+    state_topic: "pihole/{HOST}/state/blocking"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block All"
+    command_topic: "pihole/{HOST}/groups/set/block_all"
+    state_topic: "pihole/{HOST}/groups/state/block_all"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block Facebook"
+    command_topic: "pihole/{HOST}/groups/set/block_facebook"
+    state_topic: "pihole/{HOST}/groups/state/block_facebook"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block Instagram"
+    command_topic: "pihole/{HOST}/groups/set/block_instagram"
+    state_topic: "pihole/{HOST}/groups/state/block_instagram"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block TikTok"
+    command_topic: "pihole/{HOST}/groups/set/block_tiktok"
+    state_topic: "pihole/{HOST}/groups/state/block_tiktok"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block YouTube"
+    command_topic: "pihole/{HOST}/groups/set/block_youtube"
+    state_topic: "pihole/{HOST}/groups/state/block_youtube"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block Porn"
+    command_topic: "pihole/{HOST}/groups/set/block_porn"
+    state_topic: "pihole/{HOST}/groups/state/block_porn"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+
+  - name: "{HOST} Block Test"
+    command_topic: "pihole/{HOST}/groups/set/block_test"
+    state_topic: "pihole/{HOST}/groups/state/block_test"
+    payload_on: "1"
+    payload_off: "0"
+    state_on: "1"
+    state_off: "0"
+

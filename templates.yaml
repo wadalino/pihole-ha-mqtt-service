@@ -1,0 +1,27 @@
+- sensor:
+    - name: "{HOST} Time Domains Data"
+      unique_id: {HOST}_time_domains_data
+      state: "{{ states('sensor.{HOST}_over_time_domains') }}"
+      attributes:
+        time_series: >
+          {% set ns = namespace(data=[]) %}
+          {% for item in states.sensor.{HOST}_over_time_domains.attributes %}
+            {% if item is string and ':' in item %}
+              {% set ns.data = ns.data + [[item, states.sensor.{HOST}_over_time_domains.attributes[item]]] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.data }}
+
+- sensor:
+    - name: "{HOST} Time Ads Data"
+      unique_id: {HOST}_time_ads_data
+      state: "{{ states('sensor.{HOST}_over_time_ads') }}"
+      attributes:
+        time_series: >
+          {% set ns = namespace(data=[]) %}
+          {% for item in states.sensor.{HOST}_over_time_ads.attributes %}
+            {% if item is string and ':' in item %}
+              {% set ns.data = ns.data + [[item, states.sensor.{HOST}_over_time_ads.attributes[item]]] %}
+            {% endif %}
+          {% endfor %}
+          {{ ns.data }}

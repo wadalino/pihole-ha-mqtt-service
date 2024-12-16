@@ -338,21 +338,41 @@ if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/ref
 else
     echo "Error downloading the file 'card.yaml'."
 fi
+echo
 sleep 3
-if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/switches.yaml -o temp.yaml; then
-    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/switches.yaml"
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/card.switches.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/card.switches.yaml"
     rm temp.yaml  # Clean up temporary file
-    echo "Create YAML File 'switches.yaml'."
+    echo "Create YAML File 'card.switches.yaml'."
 else
-    echo "Error downloading the file 'switches.yaml'."
+    echo "Error downloading the file 'card.switches.yaml'."
 fi
+echo
 sleep 3
-if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml -o temp.yaml; then
-    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/card.yaml"
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/card.apex.char.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/card.apex.char.yaml"
     rm temp.yaml  # Clean up temporary file
-    echo "Create YAML File 'card.yaml'."
+    echo "Create YAML File 'card.apex.char.yaml'."
 else
-    echo "Error downloading the file 'card.yaml'."
+    echo "Error downloading the file 'card.apex.char.yaml'."
+fi
+echo
+sleep 3
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/mqtt.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/mqtt.yaml"
+    rm temp.yaml  # Clean up temporary file
+    echo "Create YAML File 'mqtt.yaml'."
+else
+    echo "Error downloading the file 'mqtt.yaml'."
+fi
+echo
+sleep 3
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/templates.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/templates.yaml"
+    rm temp.yaml  # Clean up temporary file
+    echo "Create YAML File 'templates.yaml'."
+else
+    echo "Error downloading the file 'templates.yaml'."
 fi
 echo
 sleep 3

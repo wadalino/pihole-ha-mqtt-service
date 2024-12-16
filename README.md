@@ -8,7 +8,7 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
 
 
 ## Automated installation
-1) download .sh file from github and exec with sudo or as root
+1) download .sh file from GitHub and exec with sudo or as root
    ```
    wget https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/main/configure.sh
    sudo bash configure.sh
@@ -45,8 +45,10 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
    - outFiles : this folder contents four files
       - automation.yaml : it contents an automation to switch off pihole during 1 hour
       - mqtt.yaml : the content of this file needs to be included in mqtt section of Home Assistant
+      - templates.yaml : this is necessary to get timeline attributes for display char  
       - card.yaml : this is a card sample that can be included to Home Assistant panel
-      - switches.yaml : this is a card sample that can be included to Home Assistant panel to change states on pi-hole
+      - card.switches.yaml : this is a card sample that can be included to Home Assistant panel to change states on pi-hole
+      - card.apex.char.yaml : this is a card sample that can be included to Home Assistant panel to view domains and ads bloked as char into a timeline
    ```
    
 
@@ -67,10 +69,23 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
    # start service
    sudo systemctl start mqtt-ha.service
    ```
-9) check that everything is working well:
+9) Check that everything is working well:
     ```
     sudo systemctl status mqtt-ha.service
     ```
+10) Remember to edit configuration files into Home Assistant:
+    ```
+    configuration.yalm > mqtt > file 'mqtt.yaml'
+    configuration.yalm > templates > file 'templates.yaml'
+    lovelace > create new card > paste file contents 'card.yaml'
+    lovelace > create new card > paste file contents 'card.switches.yaml'
+    lovelace > create new card > paste file contents 'card.apex.char.yaml'
+    settings > automations > create new automation > paste file contents 'automation.yaml'
+    ```
+
+
+
+
 ## Manual Installation
 
 Please refer installation steps described by [@Andrec83](https://github.com/Andrec83) on his [project](https://github.com/Andrec83/pihole-ha-mqtt-service)  

@@ -1,0 +1,18 @@
+type: custom:apexcharts-card
+header:
+  title: {HOST} Over Time Domains
+  show: true
+graph_span: 12h
+series:
+  - entity: sensor.{HOST}_time_domains_data
+    name: Time Domains
+    type: line
+    data_generator: |
+      const data = entity.attributes.time_series;
+      return data.map(item => [new Date(item[0]).getTime(), item[1]]);
+  - entity: sensor.{HOST}_time_ads_data
+    name: Time Ads
+    type: line
+    data_generator: |
+      const data = entity.attributes.time_series;
+      return data.map(item => [new Date(item[0]).getTime(), item[1]]);
