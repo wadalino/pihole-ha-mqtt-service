@@ -9,6 +9,7 @@ from pprint import pprint
 from colorama import Fore, Style
 from dotenv import load_dotenv
 import requests
+from datetime import datetime
 
 
 load_dotenv()
@@ -41,8 +42,6 @@ send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}
 stored_stats = {}
-stored_overtime_stats_domains = []
-stored_overtime_stats_ads = []
 config_messages = []
 
 
@@ -188,19 +187,6 @@ def convert_to_list(data):
         result.append([int(timestamp), value])
     return result
 
-def publish_individual_values(topic, overstats):
-    for domain in convert_to_list(overstats["domains_over_time"]):
-        timestamp, value = domain
-        if timestamp not in stored_overtime_stats_domains:
-            stored_overtime_stats_domains.append(timestamp)
-            client.publish(f"{topic}/domains/{timestamp}", payload=value, qos=0, retain=False)
-
-    for ad in convert_to_list(overstats["ads_over_time"]):
-        timestamp, value = ad
-        if timestamp not in stored_overtime_stats_ads:
-            stored_overtime_stats_ads.append(timestamp)
-            client.publish(f"{topic}/ads/{timestamp}", payload=value, qos=0, retain=False)
-
 def send_stats_overtime():
     """
     mqtt function to send stats overtime
@@ -208,8 +194,28 @@ def send_stats_overtime():
     """
     topic = f"{topic_stats_overtime}"
     data = get_stats_overtime()
-    publish_individual_values(topic, data)
-    client.publish(f"{topic}/domains_json", payload=data, qos=0, retain=True)
+
+    # Convertir los timestamps en claves a formato de fecha y hora legible
+    updated_domains = {}
+    updated_ads = {}
+    for timestamp, value in data['domains_over_time'].items():
+        # Convertir el timestamp a fecha y hora legible
+        date_time = datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+        updated_domains[date_time] = value
+
+    for timestamp, value in data['ads_over_time'].items():
+        # Convertir el timestamp a fecha y hora legible
+        date_time = datetime.fromtimestamp(int(timestamp)).strftime('%Y-%m-%d %H:%M:%S')
+        updated_ads[date_time] = value
+
+    str_data_domains = str(updated_domains).replace("'", '"')
+    str_data_ads = str(updated_ads).replace("'", '"')
+
+    # publish_individual_values(topic, data) # unique values OK
+
+    client.publish(f"{topic}/domains_json", payload=str_data_domains, qos=0, retain=False)
+    client.publish(f"{topic}/ads_json", payload=str_data_ads, qos=0, retain=False)
+
 
 def execute_command(command_string):
     """
