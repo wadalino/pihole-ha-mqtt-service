@@ -1,7 +1,7 @@
 type: grid
 cards:
   - type: heading
-    heading: Pi-Hole Raspberry
+    heading: Pi-Hole {HOST}
     heading_style: title
   - type: gauge
     entity: sensor.{HOST}_cpu_temp

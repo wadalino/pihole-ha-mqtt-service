@@ -248,11 +248,18 @@ else
 fi
 
 echo -e "YAML files are located in \033[31m'$ROOT_DIR/$OUTFILES_DIR'\033[0m"
-if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/home_assistant_card.yaml -o temp.yaml; then
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/card.yaml -o temp.yaml; then
     sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/card.yaml"
     rm temp.yaml  # Clean up temporary file
 else
     echo "Error downloading the file 'card.yaml'."
+fi
+sleep 3
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/switches.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/switches.yaml"
+    rm temp.yaml  # Clean up temporary file
+else
+    echo "Error downloading the file 'switches.yaml'."
 fi
 sleep 3
 if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml -o temp.yaml; then

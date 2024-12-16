@@ -1,0 +1,69 @@
+type: grid
+cards:
+  - type: heading
+    heading: "Pi-Hole {HOST} Groups "
+    heading_style: title
+  - type: tile # this switch needs a input_boolean helper and an automation
+    entity: script.activar_pi_hole_por_1_hora
+    tap_action:
+      action: toggle
+    name: Apagar 1 hora
+    hold_action:
+      action: more-info
+    icon: mdi:shield-lock-outline
+  - type: tile
+    entity: switch.{HOST}_global_control
+    tap_action:
+      action: toggle
+    name: Global
+    hold_action:
+      action: more-info
+    icon: mdi:shield-lock-outline
+  - type: tile
+    entity: switch.{HOST}_block_facebook
+    tap_action:
+      action: toggle
+    name: Facebook
+    icon: mdi:facebook
+    hold_action:
+      action: more-info
+  - type: tile
+    entity: switch.{HOST}_block_instagram
+    name: Instagram
+    icon: mdi:instagram
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+  - type: tile
+    entity: switch.{HOST}_block_porn
+    name: Porn
+    tap_action:
+      action: toggle
+    icon: mdi:human-child
+    hold_action:
+      action: more-info
+  - type: tile
+    entity: switch.{HOST}_block_tiktok
+    name: TikTok
+    icon: mdi:alpha-t
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+  - type: tile
+    entity: switch.{HOST}_block_youtube
+    name: Youtube
+    icon: mdi:youtube
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
+  - type: tile
+    entity: switch.{HOST}_block_all
+    name: All
+    icon: mdi:block-helper
+    tap_action:
+      action: toggle
+    hold_action:
+      action: more-info
