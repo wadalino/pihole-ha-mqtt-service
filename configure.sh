@@ -352,7 +352,7 @@ if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/ref
     rm temp.yaml  # Clean up temporary file
     echo "Create YAML File 'card.yaml'."
 else
-    echo "Error downloading the file 'mqtt.yaml'."
+    echo "Error downloading the file 'card.yaml'."
 fi
 echo
 sleep 3
@@ -361,7 +361,7 @@ if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/ref
     rm temp.yaml  # Clean up temporary file
     echo "Create YAML File 'automation.yaml'."
 else
-    echo "Error downloading the file 'mqtt.yaml'."
+    echo "Error downloading the file 'automation.yaml'."
 fi
 echo
 sleep 3
