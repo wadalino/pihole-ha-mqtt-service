@@ -272,7 +272,7 @@ this file contains the \033[31mpython code\033[0m to execute the service that se
 
 "
 
-check_if_env_exists "$ROOT_DIR/$HA_MQTT_DIR/.env"
+check_if_file_exists "$ROOT_DIR/$HA_MQTT_DIR/.env"
 
 if [ $? -eq 0 ]; then
     ask_yes_no "File with variables exists, would you like to rewrite it?"
