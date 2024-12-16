@@ -1,4 +1,4 @@
-alias: Activar Pi-hole por 1 hora
+alias: Activar Pi-hole {HOST} por 1 hora
 sequence:
   - target:
       entity_id: switch.{HOST}_global_control

@@ -234,7 +234,7 @@ create_env_file() {
   echo "MQTT_PASSWORD=\"$mqtt_password\"" >> "$env_file_path"
   echo "MQTT_SERVER=\"$mqtt_server\"" >> "$env_file_path"
   echo "MQTT_PORT=$mqtt_port" >> "$env_file_path"
-  echo "PIHOST=\"$pihost\"" >> "$env_file_path"
+  echo "PIHOST=\"${pihost,,}\"" >> "$env_file_path"
   echo "MODEL=\"$model\"" >> "$env_file_path"
   echo "MANUFACTURER=\"$manufacturer\"" >> "$env_file_path"
   echo "UPDATE_TIME=$update_time" >> "$env_file_path"
@@ -376,12 +376,12 @@ else
 fi
 echo
 sleep 3
-if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/automation.yaml -o temp.yaml; then
-    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/automation.yaml"
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/script.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/script.yaml"
     rm temp.yaml  # Clean up temporary file
-    echo "Create YAML File 'automation.yaml'."
+    echo "Create YAML File 'script.yaml'."
 else
-    echo "Error downloading the file 'automation.yaml'."
+    echo "Error downloading the file 'script.yaml'."
 fi
 echo
 sleep 3
