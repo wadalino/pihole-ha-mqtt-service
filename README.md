@@ -42,9 +42,11 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
    - ha-mqtt-service : this folder contents the python3 script and .env
       - mqtt-service.py : main script
       - .env : file with variables 
-   - outFiles : this folder contents two files
+   - outFiles : this folder contents four files
+      - automation.yaml : it contents an automation to switch off pihole during 1 hour
       - mqtt.yaml : the content of this file needs to be included in mqtt section of Home Assistant
       - card.yaml : this is a card sample that can be included to Home Assistant panel
+      - switches.yaml : this is a card sample that can be included to Home Assistant panel to change states on pi-hole
    ```
    
 
@@ -88,6 +90,7 @@ Please note that to use this software is necessary to have installed Python3 wit
 - paho-mqtt
 - colorama
 - dotenv
+- requests
   ```
 
 ## Thanks to 

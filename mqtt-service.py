@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import subprocess
-import sys
 import paho.mqtt.client as mqtt
 import time
 import os
@@ -9,6 +8,8 @@ import re
 from pprint import pprint
 from colorama import Fore, Style
 from dotenv import load_dotenv
+import requests
+
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ env_path = '/etc/ha-mqtt-environment'  # path to the environment file with login
 HOST = os.getenv('PIHOST')
 MODEL = os.getenv('MODEL')
 MANUFACTURER = os.getenv('MANUFACTURER')
+API_KEY = subprocess.getoutput("grep ^WEBPASSWORD= /etc/pihole/setupVars.conf | awk -F'=' '{print $2}'").strip()
 
 UPDATE_TIME = os.getenv('UPDATE_TIME')
 
@@ -32,6 +34,8 @@ topic_global_status_base = f'pihole/{HOST}/state/' # topic used to publish the s
 topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable/disable command from HA
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
+topic_stats_overtime = f'pihole/{HOST}/overtime/' # topic used for stats
+
 send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 
 """ stores the known groups, stats and their status, for the regular updates """
@@ -167,6 +171,39 @@ def send_stat_status(stat_dict):
         pprint(payload)
     # store the current value
     stored_stats[stat_dict['id']] = payload
+
+def get_stats_overtime():
+    url = f"http://localhost/admin/api.php?overTimeData10mins&auth={API_KEY}"
+    # Send a GET request
+    response = requests.get(url)
+    # Parse the JSON response directly
+    data = response.json()
+    return data
+
+def convert_to_list(data):
+    result = []
+    for timestamp, value in data.items():
+        result.append([int(timestamp), value])
+    return result
+
+def publish_individual_values(topic, overstats):
+    for domain in convert_to_list(overstats["domains_over_time"]):
+        timestamp, value = domain
+        client.publish(f"{topic}/domains/{timestamp}", payload=value, qos=0, retain=False)
+
+    for ad in convert_to_list(overstats["ads_over_time"]):
+        timestamp, value = ad
+        client.publish(f"{topic}/ads/{timestamp}", payload=value, qos=0, retain=False)
+
+def send_stats_overtime():
+    """
+    mqtt function to send stats overtime
+    input: overtime_dict as Dict
+    """
+    topic = f"{topic_stats_overtime}"
+    data = get_stats_overtime()
+    publish_individual_values(topic, data)
+
 
 
 def execute_command(command_string):

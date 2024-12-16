@@ -45,6 +45,25 @@ ask_ip() {
   done
 }
 
+ask_yes_no() {
+  local prompt="$1"
+  local answer
+
+  while true; do
+    # Ask the user for input
+    read -p "$prompt (y/n): " answer
+    answer=$(echo "$answer" | tr '[:upper:]' '[:lower:]')
+
+    if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
+      return 0  # Return success (0 for yes)
+    elif [[ "$answer" == "n" || "$answer" == "no" ]]; then
+      return 1  # Return failure (1 for no)
+    else
+      echo "Invalid response. Please answer with 'y' or 'n'."
+    fi
+  done
+}
+
 # Function to check and create directory
 check_and_create_dir() {
     local DIR="$1"  # Take directory name as an argument
@@ -91,6 +110,14 @@ check_systemctl() {
   fi
 }
 
+check_if_file_exists() {
+  if [ -f "$1" ]; then
+    return 0  # File exists, return success
+  else
+    return 1  # File doesn't exist, return failure
+  fi
+}
+
 check_packages() {
     # Check if paho-mqtt is installed via pip3
     if ! pip3 show paho-mqtt &>/dev/null; then
@@ -111,6 +138,13 @@ check_packages() {
         pip_dotenv_installed=false
     else
         pip_dotenv_installed=true
+    fi
+
+    # Check if requests is installed via pip3
+    if ! pip3 show requests &>/dev/null; then
+        pip_requests_installed=false
+    else
+        pip_requests_installed=true
     fi
 
     # Check if python3-paho-mqtt is installed via apt
@@ -134,6 +168,13 @@ check_packages() {
         apt_dotenv_installed=true
     fi
 
+    # Check if python3-requests is installed via apt
+    if ! dpkg -l | grep -q python3-requests; then
+        apt_requests_installed=false
+    else
+        apt_requests_installed=true
+    fi
+
     if [ "$pip_paho_installed" = false ] && [ "$apt_paho_installed" = false ]; then
         echo -e "Package 'paho-mqtt' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
@@ -146,6 +187,58 @@ check_packages() {
         echo -e "Package 'dotenv' is not installed, \033[1;33mcan't continue\033[0m\n"
         exit 1
     fi
+    if [ "$pip_requests_installed" = false ] && [ "$apt_requests_installed" = false ]; then
+        echo -e "Package 'requests' is not installed, \033[1;33mcan't continue\033[0m\n"
+        exit 1
+    fi
+}
+
+get_info() {
+  pihost=$(ask "Please enter a HostName to use, needs to be a single word with no special chars or spaces: ")
+  echo
+  model=$(ask "Please enter the model of your device: ")
+  echo
+  manufacturer=$(ask "Please enter the Manufacturer of your hardware: ")
+  echo
+  mqtt_user=$(ask "Please enter the MQTT User: ")
+  echo
+  mqtt_password=$(ask "Please enter the MQTT Password: ")
+  echo
+  mqtt_server=$(ask_ip "Please enter the MQTT Server IP: ")
+  echo
+  mqtt_port=$(ask_number "Please enter the MQTT Server Port: ")
+  echo
+  update_time=$(ask_number "Please enter delay in seconds that server contact with MQTT Broker: ")
+  echo
+}
+
+create_env_file() {
+  local root_dir="$1"
+  local ha_mqtt_dir="$2"
+  local env_file="$3"
+  local mqtt_user="$4"
+  local mqtt_password="$5"
+  local mqtt_server="$6"
+  local mqtt_port="$7"
+  local pihost="$8"
+  local model="$9"
+  local manufacturer="${10}"
+  local update_time="${11}"
+
+  # Ruta completa del archivo .env
+  local env_file_path="$root_dir/$ha_mqtt_dir/$env_file"
+
+  # Crear y escribir las variables de entorno en el archivo
+  echo "Creating environment file at $env_file_path"
+  echo "MQTT_USER=\"$mqtt_user\"" > "$env_file_path"
+  echo "MQTT_PASSWORD=\"$mqtt_password\"" >> "$env_file_path"
+  echo "MQTT_SERVER=\"$mqtt_server\"" >> "$env_file_path"
+  echo "MQTT_PORT=$mqtt_port" >> "$env_file_path"
+  echo "PIHOST=\"$pihost\"" >> "$env_file_path"
+  echo "MODEL=\"$model\"" >> "$env_file_path"
+  echo "MANUFACTURER=\"$manufacturer\"" >> "$env_file_path"
+  echo "UPDATE_TIME=$update_time" >> "$env_file_path"
+
 }
 
 echo
@@ -179,37 +272,28 @@ this file contains the \033[31mpython code\033[0m to execute the service that se
 
 "
 
-pihost=$(ask "Please enter a HostName to use, needs to be a single word with no special chars or spaces: ")
-echo
-model=$(ask "Please enter the model of your device: ")
-echo
-manufacturer=$(ask "Please enter the Manufacturer of your hardware: ")
-echo
-mqtt_user=$(ask "Please enter the MQTT User: ")
-echo
-mqtt_password=$(ask "Please enter the MQTT Password: ")
-echo
-mqtt_server=$(ask_ip "Please enter the MQTT Server IP: ")
-echo
-mqtt_port=$(ask_number "Please enter the MQTT Server Port: ")
-echo
-update_time=$(ask_number "Please enter delay in seconds that server contact with MQTT Broker: ")
-echo
+check_if_env_exists "$ROOT_DIR/$HA_MQTT_DIR/.env"
 
-# Create the .env file with the collected information
-env_file="$ROOT_DIR/$HA_MQTT_DIR/$ENV_FILE"
-# Write the environment variables to the file
-echo "Creating environment file at $env_file"
-echo "MQTT_USER=\"$mqtt_user\"" > $env_file
-echo "MQTT_PASSWORD=\"$mqtt_password\"" >> $env_file
-echo "MQTT_SERVER=\"$mqtt_server\"" >> $env_file
-echo "MQTT_PORT=$mqtt_port" >> $env_file
-echo "PIHOST=\"$pihost\"" >> $env_file
-echo "MODEL=\"$model\"" >> $env_file
-echo "MANUFACTURER=\"$manufacturer\"" >> $env_file
-echo "UPDATE_TIME=$update_time" >> $env_file
-
-
+if [ $? -eq 0 ]; then
+    ask_yes_no "File with variables exists, would you like to rewrite it?"
+    if [ $? -eq 0 ]; then
+        get_info
+        create_env_file $ROOT_DIR $HA_MQTT_DIR ".env" $mqtt_user $mqtt_password $mqtt_server $mqtt_port $pihost $model $manufacturer $update_time
+    else
+        source "$ROOT_DIR/$HA_MQTT_DIR/.env"
+        mqtt_user=$MQTT_USER
+        mqtt_password=$MQTT_PASSWORD
+        mqtt_server=$MQTT_SERVER
+        mqtt_port=$MQTT_PORT
+        pihost=$PIHOST
+        model=$MODEL
+        manufacturer=$MANUFACTURER
+        update_time=$UPDATE_TIME
+    fi
+else
+    get_info
+    create_env_file $ROOT_DIR $HA_MQTT_DIR $ENV_FILE $mqtt_user $mqtt_password $mqtt_server $mqtt_port $pihost $model $manufacturer $update_time
+fi
 
 # Service file
 SERVICE_PATH="$ROOT_DIR/$OUTFILES_DIR/mqtt-ha.service"
@@ -258,6 +342,7 @@ sleep 3
 if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/switches.yaml -o temp.yaml; then
     sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/switches.yaml"
     rm temp.yaml  # Clean up temporary file
+    echo "Create YAML File 'switches.yaml'."
 else
     echo "Error downloading the file 'switches.yaml'."
 fi
@@ -265,6 +350,16 @@ sleep 3
 if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/configuration.yaml -o temp.yaml; then
     sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/card.yaml"
     rm temp.yaml  # Clean up temporary file
+    echo "Create YAML File 'card.yaml'."
+else
+    echo "Error downloading the file 'mqtt.yaml'."
+fi
+echo
+sleep 3
+if curl -s https://raw.githubusercontent.com/wadalino/pihole-ha-mqtt-service/refs/heads/main/automation.yaml -o temp.yaml; then
+    sed "s/{HOST}/$pihost/g" temp.yaml > "$ROOT_DIR/$OUTFILES_DIR/automation.yaml"
+    rm temp.yaml  # Clean up temporary file
+    echo "Create YAML File 'automation.yaml'."
 else
     echo "Error downloading the file 'mqtt.yaml'."
 fi
