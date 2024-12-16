@@ -287,7 +287,7 @@ if [ $? -eq 0 ]; then
         mqtt_server=$MQTT_SERVER
         mqtt_port=$MQTT_PORT
         pihost=$PIHOST
-        ${pihost,,}
+        pihost=${pihost,,}
         model=$MODEL
         manufacturer=$MANUFACTURER
         update_time=$UPDATE_TIME
