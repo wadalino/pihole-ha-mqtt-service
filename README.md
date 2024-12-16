@@ -116,6 +116,10 @@ The script can certainly be improved and generalised, happy for any contribution
 ~~I need to improve the way I read info from the env file and manage cases where MQTT user and PWD are not necessary.~~ 
 I also need to find a way to update PiHole front-end when a group is enabled/disabled from HomeAssistant.
 
+### Known fixes
+The CPU speed in GHZ when sends by mqtt includes number of CPUs, it's necessary to explode values into different sensors 
+
+### Credit
 Credit to https://community.home-assistant.io/t/pihole-5-enable-disable-groups-block-internet/268927 for the insipration on how to manage PiHole via bash, 
 and https://medium.com/codex/setup-a-python-script-as-a-service-through-systemctl-systemd-f0cc55a42267 for the service management aspect. 
    
