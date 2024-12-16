@@ -195,7 +195,7 @@ check_packages() {
 
 get_info() {
   pihost=$(ask "Please enter a HostName to use, needs to be a single word with no special chars or spaces: ")
-  ${pihost,,}
+  pihost=${pihost,,}
   echo
   model=$(ask "Please enter the model of your device: ")
   echo
