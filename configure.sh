@@ -278,7 +278,7 @@ if [ $? -eq 0 ]; then
     ask_yes_no "File with variables exists, would you like to rewrite it?"
     if [ $? -eq 0 ]; then
         get_info
-        create_env_file $ROOT_DIR $HA_MQTT_DIR ".env" $mqtt_user $mqtt_password $mqtt_server $mqtt_port $pihost $model $manufacturer $update_time
+        create_env_file "$ROOT_DIR" "$HA_MQTT_DIR" ".env" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time"
     else
         source "$ROOT_DIR/$HA_MQTT_DIR/.env"
         mqtt_user=$MQTT_USER
