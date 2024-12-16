@@ -41,6 +41,8 @@ send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 """ stores the known groups, stats and their status, for the regular updates """
 stored_groups = {}
 stored_stats = {}
+stored_overtime_stats_domains = []
+stored_overtime_stats_ads = []
 config_messages = []
 
 
@@ -189,11 +191,15 @@ def convert_to_list(data):
 def publish_individual_values(topic, overstats):
     for domain in convert_to_list(overstats["domains_over_time"]):
         timestamp, value = domain
-        client.publish(f"{topic}/domains/{timestamp}", payload=value, qos=0, retain=False)
+        if timestamp not in stored_overtime_stats_domains:
+            stored_overtime_stats_domains.append(timestamp)
+            client.publish(f"{topic}/domains/{timestamp}", payload=value, qos=0, retain=False)
 
     for ad in convert_to_list(overstats["ads_over_time"]):
         timestamp, value = ad
-        client.publish(f"{topic}/ads/{timestamp}", payload=value, qos=0, retain=False)
+        if timestamp not in stored_overtime_stats_ads:
+            stored_overtime_stats_ads.append(timestamp)
+            client.publish(f"{topic}/ads/{timestamp}", payload=value, qos=0, retain=False)
 
 def send_stats_overtime():
     """
@@ -203,8 +209,6 @@ def send_stats_overtime():
     topic = f"{topic_stats_overtime}"
     data = get_stats_overtime()
     publish_individual_values(topic, data)
-
-
 
 def execute_command(command_string):
     """
@@ -507,4 +511,6 @@ while True:
 
     # update stats from PiHole
     update_stat_pihole()
+    # send overtime stats
+    send_stats_overtime()
     time.sleep(send_update_frequency)
