@@ -294,7 +294,7 @@ if [ $? -eq 0 ]; then
     fi
 else
     get_info
-    create_env_file $ROOT_DIR $HA_MQTT_DIR $ENV_FILE $mqtt_user $mqtt_password $mqtt_server $mqtt_port $pihost $model $manufacturer $update_time
+    create_env_file "$ROOT_DIR" "$HA_MQTT_DIR" ".env" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time"
 fi
 
 # Service file
