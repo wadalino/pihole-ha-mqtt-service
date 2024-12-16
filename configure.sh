@@ -195,6 +195,7 @@ check_packages() {
 
 get_info() {
   pihost=$(ask "Please enter a HostName to use, needs to be a single word with no special chars or spaces: ")
+  ${pihost,,}
   echo
   model=$(ask "Please enter the model of your device: ")
   echo
@@ -286,6 +287,7 @@ if [ $? -eq 0 ]; then
         mqtt_server=$MQTT_SERVER
         mqtt_port=$MQTT_PORT
         pihost=$PIHOST
+        ${pihost,,}
         model=$MODEL
         manufacturer=$MANUFACTURER
         update_time=$UPDATE_TIME
