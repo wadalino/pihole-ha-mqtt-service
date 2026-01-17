@@ -211,23 +211,34 @@ get_info() {
   echo
   update_time=$(ask_number "Please enter delay in seconds that server contact with MQTT Broker: ")
   echo
+  pihole_password=$(ask "Please enter the Pi-hole Web UI password: ")
+  echo
+  pihole_api_url=$(ask "Please enter the Pi-hole API URL [http://localhost/api]: ")
+  if [ -z "$pihole_api_url" ]; then
+    pihole_api_url="http://localhost/api"
+  fi
+  echo
+  if ask_yes_no "Verify TLS certificates when calling the Pi-hole API?"; then
+    pihole_api_verify="true"
+  else
+    pihole_api_verify="false"
+  fi
+  echo
 }
 
 create_env_file() {
-  local root_dir="$1"
-  local ha_mqtt_dir="$2"
-  local env_file="$3"
-  local mqtt_user="$4"
-  local mqtt_password="$5"
-  local mqtt_server="$6"
-  local mqtt_port="$7"
-  local pihost="$8"
-  local model="$9"
-  local manufacturer="${10}"
-  local update_time="${11}"
-
-  # Ruta completa del archivo .env
-  local env_file_path="$root_dir/$ha_mqtt_dir/$env_file"
+  local env_file_path="$1"
+  local mqtt_user="$2"
+  local mqtt_password="$3"
+  local mqtt_server="$4"
+  local mqtt_port="$5"
+  local pihost="$6"
+  local model="$7"
+  local manufacturer="$8"
+  local update_time="$9"
+  local pihole_password="${10}"
+  local pihole_api_url="${11}"
+  local pihole_api_verify="${12}"
 
   # Crear y escribir las variables de entorno en el archivo
   echo "Creating environment file at $env_file_path"
@@ -239,6 +250,9 @@ create_env_file() {
   echo "MODEL=\"$model\"" >> "$env_file_path"
   echo "MANUFACTURER=\"$manufacturer\"" >> "$env_file_path"
   echo "UPDATE_TIME=$update_time" >> "$env_file_path"
+  echo "PIHOLE_PASSWORD=\"$pihole_password\"" >> "$env_file_path"
+  echo "PIHOLE_API_URL=\"$pihole_api_url\"" >> "$env_file_path"
+  echo "PIHOLE_API_VERIFY=\"$pihole_api_verify\"" >> "$env_file_path"
 
 }
 
@@ -255,7 +269,7 @@ check_python
 check_packages
 
 ROOT_DIR="/root"
-ENV_FILE=".env"
+ENV_FILE_PATH="/etc/ha-mqtt-environment"
 HA_MQTT_DIR="ha-mqtt-service"
 OUTFILES_DIR="outFiles"
 
@@ -273,15 +287,15 @@ this file contains the \033[31mpython code\033[0m to execute the service that se
 
 "
 
-check_if_file_exists "$ROOT_DIR/$HA_MQTT_DIR/.env"
+check_if_file_exists "$ENV_FILE_PATH"
 
 if [ $? -eq 0 ]; then
     ask_yes_no "File with variables exists, would you like to rewrite it?"
     if [ $? -eq 0 ]; then
         get_info
-        create_env_file "$ROOT_DIR" "$HA_MQTT_DIR" ".env" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time"
+        create_env_file "$ENV_FILE_PATH" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time" "$pihole_password" "$pihole_api_url" "$pihole_api_verify"
     else
-        source "$ROOT_DIR/$HA_MQTT_DIR/.env"
+        source "$ENV_FILE_PATH"
         mqtt_user=$MQTT_USER
         mqtt_password=$MQTT_PASSWORD
         mqtt_server=$MQTT_SERVER
@@ -291,10 +305,13 @@ if [ $? -eq 0 ]; then
         model=$MODEL
         manufacturer=$MANUFACTURER
         update_time=$UPDATE_TIME
+        pihole_password=$PIHOLE_PASSWORD
+        pihole_api_url=${PIHOLE_API_URL:-http://localhost/api}
+        pihole_api_verify=${PIHOLE_API_VERIFY:-false}
     fi
 else
     get_info
-    create_env_file "$ROOT_DIR" "$HA_MQTT_DIR" ".env" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time"
+    create_env_file "$ENV_FILE_PATH" "$mqtt_user" "$mqtt_password" "$mqtt_server" "$mqtt_port" "$pihost" "$model" "$manufacturer" "$update_time" "$pihole_password" "$pihole_api_url" "$pihole_api_verify"
 fi
 
 # Service file

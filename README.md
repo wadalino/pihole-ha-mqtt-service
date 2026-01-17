@@ -20,10 +20,14 @@ It also exposes statistics as sensors, and it updates automatically (every 5 sec
    ```
 3) script also ask for variables:
    ```
-   HOSTNAME: the hostname to send via mqtt of 'pihole' server
+   PIHOST: the hostname to send via mqtt of 'pihole' server
    MODEL: Hardware device model, per example RPI 2
    MANUFACTURER: The manufacturer of the device, per example Raspberry
    UPDATE_TIME: Frequency update time to send a new MQTT messages
+   
+   PIHOLE_PASSWORD: assword from webserver
+   PIHOLE_API_URL: http://localhost/api
+   PIHOLE_API_VERIFY: false (default) / true 
    ```  
    
 4) Variables will be stored into file **'/root/ha-mqtt-environment/.env'**, this file will be loaded by **'mqtt-service.py'**  

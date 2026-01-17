@@ -5,6 +5,8 @@ import time
 import os
 import json
 import re
+import glob
+import shutil
 from pprint import pprint
 from colorama import Fore, Style
 from dotenv import load_dotenv
@@ -12,19 +14,17 @@ import requests
 from datetime import datetime
 
 
-load_dotenv()
-
 DEBUG=False
 TRACE=False
 
 """ Configuration Environment File """
 env_path = '/etc/ha-mqtt-environment'  # path to the environment file with login credentials and address
+load_dotenv(env_path, override=True)
 
 HOST = os.getenv('PIHOST')
 MODEL = os.getenv('MODEL')
 MANUFACTURER = os.getenv('MANUFACTURER')
-API_KEY = subprocess.getoutput("grep ^WEBPASSWORD= /etc/pihole/setupVars.conf | awk -F'=' '{print $2}'").strip()
-
+API_PASSWORD = os.getenv('PIHOLE_PASSWORD')
 UPDATE_TIME = os.getenv('UPDATE_TIME')
 
 
@@ -36,6 +36,12 @@ topic_global_set_base = f'pihole/{HOST}/set'  # topic used to receive the enable
 group_name_filter = 'block'  # keyword used to filter the PiHole group names that we want to expose
 topic_stat_base = f'pihole/{HOST}/stats/state/'  # topic used to publish the status of the statistics
 topic_stats_overtime = f'pihole/{HOST}/overtime' # topic used for stats
+
+API_BASE_URL = os.getenv('PIHOLE_API_URL', "http://localhost/api")
+API_VERIFY = os.getenv('PIHOLE_API_VERIFY', 'true').lower() in ('1', 'true', 'yes')
+_api_sid = None
+_api_sid_ts = 0
+_api_sid_ttl = 1500  # seconds; refresh a bit before the default 30m timeout
 
 send_update_frequency = int(UPDATE_TIME)  # send an update every X seconds
 
@@ -173,13 +179,203 @@ def send_stat_status(stat_dict):
     # store the current value
     stored_stats[stat_dict['id']] = payload
 
+def _get_api_headers():
+    global _api_sid, _api_sid_ts
+    now = time.time()
+    if _api_sid and (now - _api_sid_ts) < _api_sid_ttl:
+        return {"X-FTL-SID": _api_sid}
+    if not API_PASSWORD:
+        print("PIHOLE_PASSWORD not set; cannot authenticate to API")
+        return None
+    try:
+        response = requests.post(
+            f"{API_BASE_URL}/auth",
+            json={"password": API_PASSWORD},
+            verify=API_VERIFY
+        )
+        data = response.json()
+    except Exception as exc:
+        print(f"api auth request failed: {exc}")
+        return None
+    session = data.get("session", {})
+    sid = session.get("sid")
+    if not sid:
+        print(f"api auth failed: {data}")
+        return None
+    _api_sid = sid
+    _api_sid_ts = now
+    return {"X-FTL-SID": _api_sid}
+
+
+def _read_first_numeric(paths):
+    for path in paths:
+        try:
+            with open(path, 'r', encoding='utf-8') as handle:
+                value = handle.read().strip()
+            if value:
+                return float(value)
+        except OSError:
+            continue
+    return None
+
+
+def _get_cpu_temp_c():
+    value = _read_first_numeric(['/sys/class/thermal/thermal_zone0/temp'])
+    if value is None:
+        paths = glob.glob('/sys/class/thermal/thermal_zone*/temp')
+        value = _read_first_numeric(paths)
+    if value is None:
+        paths = glob.glob('/sys/class/hwmon/hwmon*/temp*_input')
+        value = _read_first_numeric(paths)
+    if value is None:
+        return None
+    if value > 1000:
+        value = value / 1000.0
+    return round(value, 2)
+
+
+def _get_load_avg():
+    try:
+        load1, load5, load15 = os.getloadavg()
+        return round(load1, 2), round(load5, 2), round(load15, 2)
+    except OSError:
+        return None, None, None
+
+
+def _get_root_disk_usage_pct():
+    try:
+        usage = shutil.disk_usage('/')
+        return round((usage.used / usage.total) * 100, 2)
+    except OSError:
+        return None
+
+
+def get_stats_v6():
+    headers = _get_api_headers()
+    if headers is None:
+        return []
+    stats_list = []
+    system_data = {}
+    try:
+        response = requests.get(f"{API_BASE_URL}/info/ftl", headers=headers, verify=API_VERIFY)
+        data = response.json()
+        ftl = data.get('ftl', {})
+    except Exception as exc:
+        print(f"api info/ftl request failed: {exc}")
+        ftl = {}
+    try:
+        system_resp = requests.get(f"{API_BASE_URL}/info/system", headers=headers, verify=API_VERIFY)
+        system_data = system_resp.json().get('system', {})
+    except Exception as exc:
+        print(f"api info/system request failed: {exc}")
+        system_data = {}
+    try:
+        summary_resp = requests.get(f"{API_BASE_URL}/stats/summary", headers=headers, verify=API_VERIFY)
+        summary_data = summary_resp.json()
+    except Exception as exc:
+        print(f"api stats/summary request failed: {exc}")
+        summary_data = {}
+    uptime = system_data.get('uptime', ftl.get('uptime'))
+    if uptime is not None:
+        stats_list.append({"name": "Uptime", "id": "Uptime", "value": int(uptime)})
+    system_cpu = system_data.get('cpu', {})
+    system_mem = system_data.get('memory', {}).get('ram', {})
+    cpu_usage = system_cpu.get('%cpu', ftl.get('%cpu'))
+    if cpu_usage is not None:
+        stats_list.append({"name": "CPU Usage", "id": "CPU_Usage", "value": round(cpu_usage, 2), "unit": "%"})
+    mem_usage = system_mem.get('%used', ftl.get('%mem'))
+    if mem_usage is not None:
+        stats_list.append({"name": "RAM Usage", "id": "RAM_Usage", "value": round(mem_usage, 2), "unit": "%"})
+    cpu_temp = _get_cpu_temp_c()
+    if cpu_temp is not None:
+        stats_list.append({"name": "CPU Temp", "id": "CPU_Temp", "value": cpu_temp, "unit": "C"})
+    load_raw = system_cpu.get('load', {}).get('raw')
+    if isinstance(load_raw, list) and len(load_raw) >= 3:
+        load1, load5, load15 = [round(val, 2) for val in load_raw[:3]]
+    else:
+        load1, load5, load15 = _get_load_avg()
+    if load1 is not None:
+        stats_list.append({"name": "Task Load 1min", "id": "Task_Load_1min", "value": load1})
+    if load5 is not None:
+        stats_list.append({"name": "Task Load 5min", "id": "Task_Load_5min", "value": load5})
+    if load15 is not None:
+        stats_list.append({"name": "Task Load 15min", "id": "Task_Load_15min", "value": load15})
+    hdd_usage = _get_root_disk_usage_pct()
+    if hdd_usage is not None:
+        stats_list.append({"name": "HDD Usage", "id": "HDD_Usage", "value": hdd_usage, "unit": "%"})
+    queries = summary_data.get('queries', {})
+    total = queries.get('total') if isinstance(queries, dict) else None
+    blocked = queries.get('blocked') if isinstance(queries, dict) else None
+    if total is None:
+        total = summary_data.get('total_queries') or summary_data.get('queries_total')
+    if blocked is None:
+        blocked = summary_data.get('blocked') or summary_data.get('queries_blocked')
+    if total is not None:
+        stats_list.append({"name": "Requests Total", "id": "Requests_Total", "value": total})
+    if blocked is not None:
+        stats_list.append({"name": "Requests Blocked Total", "id": "Requests_Blocked_Total", "value": blocked})
+    return stats_list
+
+
+def _normalize_overtime_payload(data):
+    if not isinstance(data, dict):
+        return {}
+    if 'domains_over_time' in data and 'ads_over_time' in data:
+        return data
+    history = data.get('history')
+    if isinstance(history, dict):
+        if 'domains_over_time' in history and 'ads_over_time' in history:
+            return history
+        timestamps = history.get('timestamps') or history.get('times') or history.get('time')
+        domains = history.get('domains') or history.get('total')
+        blocked = history.get('blocked') or history.get('ads')
+        if isinstance(timestamps, list) and isinstance(domains, list) and isinstance(blocked, list):
+            return {
+                'domains_over_time': {str(ts): val for ts, val in zip(timestamps, domains)},
+                'ads_over_time': {str(ts): val for ts, val in zip(timestamps, blocked)},
+            }
+    if isinstance(history, list):
+        domains_over_time = {}
+        ads_over_time = {}
+        for item in history:
+            if not isinstance(item, dict):
+                continue
+            ts = item.get('timestamp') if 'timestamp' in item else item.get('time')
+            if ts is None:
+                continue
+            if 'domains' in item:
+                domains = item.get('domains')
+            elif 'total' in item:
+                domains = item.get('total')
+            else:
+                domains = None
+            if 'blocked' in item:
+                blocked = item.get('blocked')
+            elif 'ads' in item:
+                blocked = item.get('ads')
+            else:
+                blocked = None
+            if domains is not None:
+                domains_over_time[str(ts)] = domains
+            if blocked is not None:
+                ads_over_time[str(ts)] = blocked
+        if domains_over_time and not ads_over_time:
+            ads_over_time = {ts: 0 for ts in domains_over_time}
+        if domains_over_time and ads_over_time:
+            return {'domains_over_time': domains_over_time, 'ads_over_time': ads_over_time}
+    return {}
+
+
 def get_stats_overtime():
-    url = f"http://localhost/admin/api.php?overTimeData10mins&auth={API_KEY}"
+    url = f"{API_BASE_URL}/history"
+    headers = _get_api_headers()
+    if headers is None:
+        return {}
     # Send a GET request
-    response = requests.get(url)
+    response = requests.get(url, headers=headers, verify=API_VERIFY)
     # Parse the JSON response directly
     data = response.json()
-    return data
+    return _normalize_overtime_payload(data)
 
 def convert_to_list(data):
     result = []
@@ -194,6 +390,12 @@ def send_stats_overtime():
     """
     topic = f"{topic_stats_overtime}"
     data = get_stats_overtime()
+    if not isinstance(data, dict):
+        print("unexpected overtime data format; skipping publish")
+        return
+    if 'domains_over_time' not in data or 'ads_over_time' not in data:
+        print(f"missing overtime keys in response: {list(data.keys())}")
+        return
 
     # Convertir los timestamps en claves a formato de fecha y hora legible
     updated_domains = {}
@@ -433,7 +635,10 @@ def parse_stats(stat_string):
 def update_stat_pihole():
     stat_command = "pihole -c -e"
     stat_result = execute_command(stat_command)
-    stats_list = parse_stats(' '.join(stat_result))
+    if stat_result and "Chronometer is gone" not in stat_result[0]:
+        stats_list = parse_stats(' '.join(stat_result))
+    else:
+        stats_list = get_stats_v6()
     if TRACE:
         pprint(stats_list)
         print("\n\n\n")
@@ -463,9 +668,11 @@ mac_address = execute_command(f"ifconfig | grep {interface} -A 7 | grep ether | 
 mac_address_no_columns = mac_address.replace(':', '')
 
 """ capture the stats from pihole """
-command = "pihole -c -e"
-result = execute_command(command)
-stats = parse_stats(' '.join(result))
+stat_result = execute_command("pihole -c -e")
+if stat_result and "Chronometer is gone" not in stat_result[0]:
+    stats = parse_stats(' '.join(stat_result))
+else:
+    stats = get_stats_v6()
 
 """ create the config messages for home assistant """
 for group_name in group_list:

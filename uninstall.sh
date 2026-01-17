@@ -5,3 +5,4 @@ systemctl daemon-reload
 
 rm -rf /root/ha-mqtt-service
 rm -rf /root/outFiles
+rm -f /etc/ha-mqtt-environment
