@@ -1,4 +1,6 @@
 # pihole-ha-mqtt-service
+> 2026-01-17 : **updated** to **pihole v6.3**
+
 Pihole service that exposes group management (enable/disable) to Home Assistant with autoconfiguration.
 It also exposes statistics as sensors, and it updates automatically (every 5 second if not set otherwise) when a group is enabled/disabled from the PiHole front-end itself.
 
